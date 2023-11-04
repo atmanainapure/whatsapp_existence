@@ -1,0 +1,3419 @@
+import json
+import re
+from datetime import datetime
+
+# The text of the conversation
+conversation = """
+01/01/16, 00:06 - Kanika Malkani: Happy New Year!👀🎊🌠🌠
+01/01/16, 00:06 - Pranay Saksena: Happy new year
+01/01/16, 15:38 - Kanika Malkani: U got the mail from Mahek?
+01/01/16, 15:43 - Pranay Saksena: I didnt see yet
+01/01/16, 15:43 - Kanika Malkani: Ok
+01/01/16, 22:00 - Kanika Malkani: <Media omitted>
+01/01/16, 22:01 - Kanika Malkani: Doesn't she look like a female version of you?
+01/01/16, 22:01 - Kanika Malkani: Just saying!😏
+01/01/16, 22:40 - Pranay Saksena: What!!😳😒😦
+01/01/16, 22:44 - Pranay Saksena: Who is she
+01/01/16, 22:44 - Pranay Saksena: You know her?
+01/01/16, 22:49 - Pranay Saksena: My eyes are not so big l
+01/01/16, 22:50 - Pranay Saksena: Nor do I put kajal 😂
+01/01/16, 22:50 - Pranay Saksena: Nor do I have long hair😂
+01/01/16, 22:51 - Pranay Saksena: Just joking
+01/01/16, 23:46 - Kanika Malkani: I said Female Version!
+01/01/16, 23:46 - Kanika Malkani: But doesn't she look like u!
+02/01/16, 15:45 - Pranay Saksena: Kind of yeah
+02/01/16, 15:45 - Pranay Saksena: But I need one help
+02/01/16, 15:46 - Pranay Saksena: <Media omitted>
+02/01/16, 15:46 - Pranay Saksena: Send me all this na pls
+17/01/16, 12:07 - Kanika Malkani: My proof!!😝😝😑😑
+17/01/16, 12:17 - Pranay Saksena: Which phone
+17/01/16, 12:18 - Kanika Malkani: Mine?
+17/01/16, 12:46 - Pranay Saksena: No no raju's
+17/01/16, 13:11 - Kanika Malkani: Raju has a HTC phone
+17/01/16, 14:26 - Kanika Malkani: But i am not telling which phone i have!
+19/01/16, 20:50 - Kanika Malkani: Have you given the form for the heats?
+19/01/16, 21:15 - Pranay Saksena: Obvio I'm comin tomo
+19/01/16, 21:29 - Kanika Malkani: Not so obvio!
+31/01/16, 15:21 - Kanika Malkani: <Media omitted>
+31/01/16, 15:21 - Kanika Malkani: <Media omitted>
+31/01/16, 15:22 - Kanika Malkani: <Media omitted>
+31/01/16, 15:22 - Kanika Malkani: This is all i have written
+31/01/16, 15:32 - Kanika Malkani: Ignore the last question
+31/01/16, 15:32 - Kanika Malkani: Pls don't read it
+02/02/16, 13:36 - Kanika Malkani: Today in school:-
+Science- preparing common salts notes written and Q/A written
+English- advertisements extract done and Q/A discussed
+W.Exp- napkin folding done
+Yoga-free
+Drama- next week prepare the drama with props and come
+Hindi- 3ws given.(give it to you Tomorrow)
+Art- bucket done
+02/02/16, 15:53 - Pranay Saksena: Thanks a lot!! Can you send me the science notes and q/a and the English extract q/a
+02/02/16, 16:32 - Kanika Malkani: Sorry but I'll send it after 7:00
+02/02/16, 16:39 - Pranay Saksena: Okay no problem
+02/02/16, 19:47 - Kanika Malkani: <Media omitted>
+02/02/16, 19:47 - Kanika Malkani: <Media omitted>
+02/02/16, 19:48 - Kanika Malkani: <Media omitted>
+02/02/16, 19:48 - Kanika Malkani: <Media omitted>
+02/02/16, 19:48 - Kanika Malkani: <Media omitted>
+02/02/16, 19:48 - Kanika Malkani: <Media omitted>
+02/02/16, 19:48 - Kanika Malkani: End of chp q1 and q2 are merged
+02/02/16, 19:49 - Kanika Malkani: English markings were their so I'll give them to you later
+02/02/16, 19:49 - Kanika Malkani: And questions not written as wrote i them fast-fast so pls write them
+11/02/16, 17:31 - Kanika Malkani: Oh i know.....
+11/02/16, 17:32 - Kanika Malkani: Who is Dk
+11/02/16, 17:32 - Kanika Malkani: Dhruv Khanchandani!
+11/02/16, 17:32 - Kanika Malkani: After a lot of research
+11/02/16, 18:05 - Pranay Saksena: Very smart
+11/02/16, 19:36 - Kanika Malkani: Thanks!😎😎🙈🙈
+15/02/16, 15:08 - Kanika Malkani: Today in school:-
+English- test taken and read a ghost story part 3
+Maths- Bk completed and have to submit on Thursday
+Hindi-rabindranath chp read. Test on shudh ashudh on 26th
+ICT-free
+Marathi- activity discussed
+Essay submitted and patr written
+You are the new peer mentor of some class
+15/02/16, 15:42 - Pranay Saksena: 6D
+15/02/16, 15:42 - Pranay Saksena: Thanks a ton!!
+15/02/16, 15:42 - Pranay Saksena: What test in english
+15/02/16, 15:42 - Kanika Malkani: Vocabulary
+15/02/16, 15:43 - Kanika Malkani: Maths miss will not take ur test again
+15/02/16, 15:43 - Pranay Saksena: Kya aaya
+15/02/16, 15:43 - Kanika Malkani: It was way too easy
+15/02/16, 15:43 - Kanika Malkani: Civics retest for everyone
+15/02/16, 15:43 - Kanika Malkani: 😂😂😂
+15/02/16, 15:43 - Pranay Saksena: One second
+15/02/16, 15:44 - Pranay Saksena: English easy tha ki maths
+15/02/16, 15:44 - Pranay Saksena: Test
+15/02/16, 15:44 - Kanika Malkani: English
+15/02/16, 15:44 - Pranay Saksena: Usme kya aaya
+15/02/16, 15:44 - Kanika Malkani: Choose the correct spelling
+15/02/16, 15:44 - Pranay Saksena: Wow
+15/02/16, 15:45 - Pranay Saksena: And math
+15/02/16, 15:45 - Kanika Malkani: Yet no one got 10/10😞😞
+15/02/16, 15:45 - Kanika Malkani: Maths was taken on Friday
+15/02/16, 15:45 - Pranay Saksena: English miss will take my retest?
+15/02/16, 15:45 - Kanika Malkani: Maybe
+15/02/16, 15:45 - Pranay Saksena: How was math
+15/02/16, 15:46 - Kanika Malkani: Ok ok
+15/02/16, 15:46 - Pranay Saksena: Why will she not take my test
+15/02/16, 15:46 - Pranay Saksena: Math miss
+15/02/16, 15:47 - Kanika Malkani: Cause today was the day when she took a test of ppl who were absent from our class on Friday and all classes mein test is done
+15/02/16, 15:47 - Pranay Saksena: Okay then don't tell me the answers
+15/02/16, 15:48 - Kanika Malkani: So want the questions?😂😂
+15/02/16, 15:48 - Pranay Saksena: Hindi Test done kya
+15/02/16, 15:48 - Pranay Saksena: No
+15/02/16, 15:48 - Kanika Malkani: Nope
+15/02/16, 15:48 - Kanika Malkani: Its tomorrow
+15/02/16, 15:49 - Pranay Saksena: Tomorrow is two chp test na
+15/02/16, 15:49 - Kanika Malkani: Yup and kaal
+15/02/16, 15:49 - Pranay Saksena: Today had to be anek shabd test na
+15/02/16, 15:49 - Kanika Malkani: No on 22nd
+15/02/16, 15:49 - Pranay Saksena: Oh wow
+15/02/16, 15:49 - Pranay Saksena: Mera toh yaad hai
+15/02/16, 15:50 - Pranay Saksena: Shilpa miss came to know that everyone did cheating
+15/02/16, 15:50 - Pranay Saksena: ??
+15/02/16, 15:50 - Kanika Malkani: Yes
+15/02/16, 15:50 - Pranay Saksena: Cameras??
+15/02/16, 15:50 - Kanika Malkani: Now every class will get a different test
+15/02/16, 15:50 - Kanika Malkani: Idk
+15/02/16, 15:50 - Pranay Saksena: Or some smarty complained?
+15/02/16, 15:51 - Kanika Malkani: But i think it's mostly a student
+15/02/16, 15:51 - Pranay Saksena: Okay so when is the retest
+15/02/16, 15:51 - Kanika Malkani: Even ppl from B div came in our class and were asking the questions
+15/02/16, 15:51 - Kanika Malkani: Miss would have come to know
+15/02/16, 15:52 - Pranay Saksena: Okay
+15/02/16, 15:52 - Kanika Malkani: Bcoz even Trimann got good marks
+15/02/16, 15:52 - Pranay Saksena: Okay but when is the retest
+15/02/16, 15:52 - Kanika Malkani: Marathi activity I'll explain tomorrow
+15/02/16, 15:52 - Kanika Malkani: The retest is on Thursday
+15/02/16, 15:53 - Kanika Malkani: And history on Friday
+15/02/16, 15:53 - Pranay Saksena: Both the tests are being taken again
+15/02/16, 15:53 - Pranay Saksena: ???
+15/02/16, 15:53 - Kanika Malkani: Nah only questions wala
+15/02/16, 15:53 - Pranay Saksena: Subjective
+15/02/16, 15:53 - Pranay Saksena: ??
+15/02/16, 15:53 - Pranay Saksena: The one on friday
+15/02/16, 15:53 - Kanika Malkani: The one we gave on Friday
+15/02/16, 15:54 - Pranay Saksena: Ya
+15/02/16, 15:54 - Pranay Saksena: 😂😂😂😂
+15/02/16, 15:54 - Pranay Saksena: Miss is so smart
+15/02/16, 15:54 - Kanika Malkani: 😂yes she is
+15/02/16, 15:54 - Pranay Saksena: First test ka pata nahi chala
+15/02/16, 15:55 - Pranay Saksena: Jabki second test ka malum tha
+15/02/16, 15:55 - Kanika Malkani: Ya
+15/02/16, 15:55 - Pranay Saksena: What is the activity about
+15/02/16, 15:55 - Pranay Saksena: Marathi
+15/02/16, 15:55 - Kanika Malkani: Marathi is basically two groups
+15/02/16, 15:55 - Pranay Saksena: Did shilpa miss shout in the class
+15/02/16, 15:55 - Kanika Malkani: Shubham ka group and my group
+15/02/16, 15:56 - Kanika Malkani: Nah,when maths miss was clearing doubts she came in and said retest
+15/02/16, 15:56 - Pranay Saksena: And was maths miss angry or normal??
+15/02/16, 15:56 - Pranay Saksena: With me
+15/02/16, 15:56 - Kanika Malkani: Nothing
+15/02/16, 15:57 - Kanika Malkani: She just kinda had a attitude that I'll not take a retest
+15/02/16, 15:57 - Pranay Saksena: Okay I'm in which grp kanishka??
+15/02/16, 15:57 - Pranay Saksena: 😂😂😂
+15/02/16, 15:57 - Kanika Malkani: 😡😡
+15/02/16, 15:57 - Kanika Malkani: Go.......
+15/02/16, 15:57 - Pranay Saksena: 😜😂😜😜😜😂😜😜
+15/02/16, 15:57 - Pranay Saksena: Achha bolo
+15/02/16, 15:58 - Kanika Malkani: I'm not telling you anything
+15/02/16, 15:58 - Pranay Saksena: Arey sorryyy!!
+15/02/16, 15:59 - Pranay Saksena: Krupiya maaf kari de na
+15/02/16, 16:00 - Pranay Saksena: Arey bol na
+15/02/16, 16:00 - Pranay Saksena: Pls
+15/02/16, 16:01 - Kanika Malkani: U r in Kanika Malkani's group
+15/02/16, 16:01 - Kanika Malkani: I did not choose you
+15/02/16, 16:01 - Kanika Malkani: Miss put you in my team
+15/02/16, 16:01 - Pranay Saksena: Okay
+15/02/16, 16:01 - Pranay Saksena: What do we have to do
+15/02/16, 16:02 - Kanika Malkani: Naitica
+Rishi
+Ravkiran
+And some more ppl
+15/02/16, 16:03 - Pranay Saksena: Strong yeam
+15/02/16, 16:03 - Pranay Saksena: T
+15/02/16, 16:03 - Pranay Saksena: Bolo
+15/02/16, 16:03 - Pranay Saksena: Aage
+15/02/16, 16:03 - Kanika Malkani: Thanks!!🤗🤗🤗
+15/02/16, 16:03 - Kanika Malkani: Bas na bhai
+15/02/16, 16:03 - Pranay Saksena: <Media omitted>
+15/02/16, 16:03 - Kanika Malkani: Takes too much time to type all this
+15/02/16, 16:04 - Pranay Saksena: Record
+15/02/16, 16:04 - Kanika Malkani: I'm not recording an audio
+15/02/16, 16:04 - Pranay Saksena: Your wish
+15/02/16, 16:04 - Kanika Malkani: Dont be so desperate
+15/02/16, 16:04 - Kanika Malkani: Tomorrow in schoil
+15/02/16, 16:04 - Pranay Saksena: <Media omitted>
+15/02/16, 16:04 - Kanika Malkani: Schoil
+15/02/16, 16:04 - Pranay Saksena: Okay
+15/02/16, 16:04 - Kanika Malkani: School**
+15/02/16, 16:04 - Kanika Malkani: Bye
+15/02/16, 16:04 - Pranay Saksena: Tankh yo
+15/02/16, 16:05 - Pranay Saksena: Bah bah!
+15/02/16, 16:05 - Kanika Malkani: Remember their is a test on shudh ashudh
+15/02/16, 16:05 - Pranay Saksena: On 26
+15/02/16, 16:05 - Pranay Saksena: Okay
+15/02/16, 16:05 - Kanika Malkani: Welcome!!!✌🏻✌🏻
+15/02/16, 16:06 - Pranay Saksena: Btw your subjects
+15/02/16, 16:06 - Pranay Saksena: ??
+15/02/16, 16:06 - Pranay Saksena: Which stream
+15/02/16, 16:07 - Kanika Malkani: Opt 1
+15/02/16, 16:07 - Kanika Malkani: Wat abt u?
+15/02/16, 16:07 - Pranay Saksena: Same
+15/02/16, 16:07 - Kanika Malkani: Kk
+15/02/16, 16:07 - Pranay Saksena: Hin or ict??
+15/02/16, 16:07 - Kanika Malkani: Ict
+15/02/16, 16:07 - Pranay Saksena: Im still confused
+15/02/16, 16:08 - Kanika Malkani: Today we had a proxy so leena miss asked us
+15/02/16, 16:08 - Pranay Saksena: What about vidhita and kiara
+15/02/16, 16:08 - Kanika Malkani: 26 out of 30 said opt1
+15/02/16, 16:08 - Kanika Malkani: Both of them are opt 1
+15/02/16, 16:08 - Pranay Saksena: Hin or ict
+15/02/16, 16:08 - Kanika Malkani: They have submitted the form
+15/02/16, 16:08 - Kanika Malkani: Ict
+15/02/16, 16:09 - Kanika Malkani: Vidhita has not
+15/02/16, 16:09 - Pranay Saksena: So you and kiara have submitted
+15/02/16, 16:09 - Kanika Malkani: Anita miss was absent
+15/02/16, 16:10 - Kanika Malkani: Prannnnnnnay!!😂😂😂
+15/02/16, 16:10 - Pranay Saksena: My god I prefer single 'n'
+15/02/16, 16:10 - Kanika Malkani: 😂
+15/02/16, 16:12 - Pranay Saksena: You know if I drop Hindi then the theory of classical music may get tough for me, cause it's hi fi hindi
+15/02/16, 16:12 - Pranay Saksena: Shuddh Hindi
+15/02/16, 16:12 - Kanika Malkani: Point
+15/02/16, 16:13 - Kanika Malkani: Then go for hindi
+15/02/16, 16:13 - Pranay Saksena: Honestly mujhe abhi bhi zyada kuch samajh me nahi aata to baad me kya hoga
+15/02/16, 16:14 - Pranay Saksena: I wonder
+15/02/16, 16:14 - Pranay Saksena: Chalo okay bye thanks again
+15/02/16, 16:15 - Pranay Saksena: Have a good time ignoring me 👍🏼👍🏼👍🏼
+15/02/16, 16:15 - Kanika Malkani: I am not
+15/02/16, 16:16 - Kanika Malkani: I was just busy fetching a chocolate
+15/02/16, 16:16 - Kanika Malkani: Bye
+15/02/16, 16:17 - Kanika Malkani: I only went for a minute and felt i was ignoring you!😑😑
+15/02/16, 16:17 - Kanika Malkani: Kya hoga iss desh ka
+15/02/16, 16:26 - Pranay Saksena: Actually i wanted to go somewhere
+15/02/16, 16:26 - Pranay Saksena: That's why maine aisa bola 😜
+15/02/16, 16:26 - Pranay Saksena: Pls send me marathi patr
+15/02/16, 16:26 - Pranay Saksena: Na
+19/02/16, 15:20 - Pranay Saksena: Pls send me the particle theory and properties bk 2 chps notes after you come back
+19/02/16, 20:07 - Kanika Malkani: After I come back from where?🤔🤔🤔🤔
+19/02/16, 20:10 - Kanika Malkani: Mujhe shak ho raha hai!
+19/02/16, 20:10 - Kanika Malkani: Bolo
+19/02/16, 20:11 - Kanika Malkani: Where did you get that info?🤖🤖
+19/02/16, 20:11 - Pranay Saksena: Arey calm down
+19/02/16, 20:11 - Pranay Saksena: What info
+19/02/16, 20:11 - Pranay Saksena: Achha
+19/02/16, 20:12 - Pranay Saksena: I called vidhita for notes and her mom told she's at her friends house
+19/02/16, 20:13 - Kanika Malkani: Too bad wrong guess
+19/02/16, 20:13 - Pranay Saksena: Kya
+19/02/16, 20:13 - Kanika Malkani: That friend was not me
+19/02/16, 20:14 - Kanika Malkani: 3:20 we were at tuitions
+19/02/16, 20:14 - Pranay Saksena: 3 30
+19/02/16, 20:15 - Pranay Saksena: You and vidhita?
+19/02/16, 20:15 - Kanika Malkani: And later she went out and went to Lokhandwala
+19/02/16, 20:15 - Kanika Malkani: And someone
+19/02/16, 20:15 - Pranay Saksena: And someone
+19/02/16, 20:15 - Pranay Saksena: ???
+19/02/16, 20:16 - Kanika Malkani: Yes and someone
+19/02/16, 20:16 - Kanika Malkani: You want Marathi patr
+19/02/16, 20:16 - Pranay Saksena: Ya
+19/02/16, 20:16 - Pranay Saksena: What someone??
+19/02/16, 20:16 - Kanika Malkani: Skip it
+19/02/16, 20:17 - Kanika Malkani: Typing is too confusing
+19/02/16, 20:17 - Kanika Malkani: Specially mine
+19/02/16, 20:17 - Pranay Saksena: Whatever I thought you both were at kiara's place or maybe they were at your place
+19/02/16, 20:17 - Kanika Malkani: Wrong thought
+20/02/16, 15:52 - Kanika Malkani: U called.
+22/02/16, 18:04 - Kanika Malkani: Tomorrow youre bringing 8 perforated sheets
+22/02/16, 18:08 - Pranay Saksena: Done
+23/02/16, 14:14 - Kanika Malkani: Why were you absent?
+23/02/16, 14:15 - Kanika Malkani: Coming tomorrow na for the picnic
+23/02/16, 14:16 - Kanika Malkani: For Tomorrow-
+🔸Wear jeans with Pt uniform and sports shoes
+🔸We can sit in any bus with our freinds(info given by Afreen)
+23/02/16, 14:20 - Kanika Malkani: In school-
+Science- Classification and Variation done and spider key made
+English- free
+W.Exp- Submit the bully poster by Friday
+Yoga- Submit your yoga Project just before going for the picnic tomorrow
+Drama- your in Anirudhs group for the next drama assignment
+Hindi - test marks given. U got 9/10(sentences). Your paper is with sir
+Art- Drawing done✌🏻
+23/02/16, 14:40 - Pranay Saksena: Yoga family project right?
+23/02/16, 14:50 - Kanika Malkani: Yup
+02/03/16, 17:34 - Pranay Saksena: Can we print the info for the class project
+02/03/16, 19:04 - Kanika Malkani: Yes
+02/03/16, 19:31 - Kanika Malkani: I asked Anita Miss
+24/03/16, 19:55 - Kanika Malkani: <Media omitted>
+24/03/16, 21:27 - Pranay Saksena: LOL
+29/03/16, 15:12 - Kanika Malkani: How do we put navigation buttons in front-page?
+29/03/16, 16:44 - Pranay Saksena: Check the tb
+29/03/16, 22:17 - Kanika Malkani: <Media omitted>
+01/04/16, 19:34 - Kanika Malkani: So sorry but what do u want? Repeat pls
+01/04/16, 19:34 - Kanika Malkani: Civics UN Agencies?!
+25/04/16, 15:49 - Kanika Malkani: Hello!
+25/04/16, 15:59 - Pranay Saksena: Hello!
+25/04/16, 16:54 - Kanika Malkani: Getting bored in Delhi!👀
+25/04/16, 18:43 - Pranay Saksena: Why
+25/04/16, 18:43 - Pranay Saksena: Wat happened
+25/04/16, 18:48 - Pranay Saksena: Pollution dimag par chadh gaya
+25/04/16, 18:48 - Pranay Saksena: Ya garmi chad gayi
+25/04/16, 18:59 - Kanika Malkani: None of my cousins are at home
+25/04/16, 18:59 - Kanika Malkani: All oldies
+25/04/16, 18:59 - Kanika Malkani: I have to catch a flight at 10:00
+25/04/16, 19:01 - Pranay Saksena: Talk to oldies
+25/04/16, 19:01 - Kanika Malkani: I meant adults
+25/04/16, 19:03 - Pranay Saksena: Ask them about their past
+25/04/16, 19:03 - Pranay Saksena: Ok
+25/04/16, 19:03 - Pranay Saksena: Bye
+25/04/16, 19:04 - Kanika Malkani: All gone
+25/04/16, 19:04 - Kanika Malkani: I'm home alone
+25/04/16, 19:25 - Pranay Saksena: Ok I'll send burglars at the addresss
+25/04/16, 19:26 - Pranay Saksena: (If you get it
+25/04/16, 19:26 - Pranay Saksena: )
+07/05/16, 14:56 - Kanika Malkani: Hi
+07/05/16, 14:56 - Kanika Malkani: Aren't your exams over?
+07/05/16, 14:56 - Kanika Malkani: Do u still have to give Checkpoint?
+07/05/16, 14:57 - Pranay Saksena: Lol
+07/05/16, 14:58 - Kanika Malkani: Change your dp and status then smarty!😎
+01/06/16, 14:48 - Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them. Tap to learn more.
+14/07/16, 13:07 - Kanika Malkani: What was done in school today?
+14/07/16, 13:07 - Kanika Malkani: Tell me ASAP
+14/07/16, 16:52 - Pranay Saksena: Chemistry tests discussed ionic bonding explained more sums of balancing the equation given
+14/07/16, 16:54 - Pranay Saksena: English rough draft of bodmin moor written. Sample writing on the same given. Write the final draft and submit until Wednesday
+14/07/16, 16:55 - Pranay Saksena: Drama practice the dogboy script with your grp and perform (without sets costumes)
+14/07/16, 16:55 - Pranay Saksena: Maths accuracy test and 6.4 hw
+14/07/16, 16:57 - Pranay Saksena: Ict absolute and relative referencing explained.
+14/07/16, 16:57 - Pranay Saksena: PE debate selections
+14/07/16, 17:10 - Kanika Malkani: What test in maths
+14/07/16, 17:11 - Kanika Malkani: And send me notes of chemistry.
+14/07/16, 18:22 - Pranay Saksena: <Media omitted>
+14/07/16, 18:22 - Pranay Saksena: Calcium Fluoride
+14/07/16, 18:23 - Pranay Saksena: Accuracy upper and lower bounds test be prepared
+14/07/16, 19:00 - Kanika Malkani: Thanks!👍🏻
+14/07/16, 19:00 - Pranay Saksena: You called
+14/07/16, 19:01 - Pranay Saksena: ?
+14/07/16, 19:01 - Kanika Malkani: Not me
+14/07/16, 19:01 - Kanika Malkani: Mastikhor........person
+14/07/16, 19:01 - Pranay Saksena: Who?
+14/07/16, 19:01 - Kanika Malkani: ..........
+14/07/16, 19:02 - Kanika Malkani: My brother
+14/07/16, 19:02 - Kanika Malkani: 👨‍👩‍👧‍👦
+14/07/16, 19:02 - Pranay Saksena: Okay
+14/07/16, 19:02 - Kanika Malkani: He was calling my mom
+25/10/16, 14:46 - Kanika Malkani: Once you message about the park on the group....message this too....
+25/10/16, 14:47 - Kanika Malkani: Kiaras address- 
+704/20 Mayfair building, Oshiwara,Andheri (west)
+Near Marks and Spencer's
+Opp. Indradarshan
+08/12/16, 17:39 - Pranay Saksena: <Media omitted>
+08/12/16, 19:36 - Pranay Saksena: Change things a bit....
+08/12/16, 19:36 - Pranay Saksena: And transform this world!! (LOL)
+12/12/16, 16:17 - Kanika Malkani: What is ICT homework?
+12/12/16, 16:42 - Pranay Saksena: Safety and Security test
+12/12/16, 16:42 - Kanika Malkani: Okay.
+12/12/16, 16:42 - Pranay Saksena: Anything else?
+12/12/16, 16:42 - Kanika Malkani: Thanks
+12/12/16, 16:42 - Kanika Malkani: Nope
+13/12/16, 20:12 - Kanika Malkani: Congrats🎊
+13/12/16, 20:13 - Kanika Malkani: For the film festival.
+13/12/16, 20:13 - Pranay Saksena: Thanks!!
+24/12/16, 14:21 - Kanika Malkani: Status
+24/12/16, 14:21 - Kanika Malkani: Really Pranay Saksena?😏
+24/12/16, 17:48 - Pranay Saksena: You have no idea.....
+24/12/16, 18:01 - Kanika Malkani: Hmm
+24/12/16, 19:50 - Pranay Saksena: 😂Just Joking!😂
+24/12/16, 20:19 - Kanika Malkani: 😂😂
+24/12/16, 20:45 - Kanika Malkani: Should we like really meet?
+24/12/16, 20:45 - Kanika Malkani: Like our 8C group?
+24/12/16, 21:15 - Pranay Saksena: Do you not wanna meet?
+24/12/16, 21:15 - Pranay Saksena: Or do you?
+24/12/16, 21:16 - Pranay Saksena: I do
+24/12/16, 22:08 - Kanika Malkani: Finally one day Pranay Saksena decides to meet his old retarded friends.
+24/12/16, 22:08 - Kanika Malkani: Actually not such a bad idea.
+24/12/16, 22:08 - Kanika Malkani: Who's in?
+24/12/16, 22:08 - Kanika Malkani: Mind if i put this on the group👆🏻👆🏻
+24/12/16, 22:09 - Pranay Saksena: Ok LOL
+24/12/16, 22:09 - Pranay Saksena: Yeah
+24/12/16, 22:09 - Pranay Saksena: Not 'old friends' really, but yeah will do
+24/12/16, 22:10 - Kanika Malkani: Ohh
+24/12/16, 22:10 - Kanika Malkani: Yeah
+24/12/16, 22:10 - Kanika Malkani: Sorry
+24/12/16, 22:10 - Pranay Saksena: I meant I don't mind
+24/12/16, 22:11 - Kanika Malkani: So basically i shouldn't put old friends right?
+24/12/16, 22:11 - Pranay Saksena: You can
+24/12/16, 22:12 - Kanika Malkani: Ok whatever
+24/12/16, 22:12 - Kanika Malkani: Here it goes
+24/12/16, 22:29 - Kanika Malkani: Hello
+24/12/16, 22:30 - Kanika Malkani: So i can come to equal streets
+24/12/16, 22:30 - Pranay Saksena: Great then
+24/12/16, 22:30 - Kanika Malkani: Just finally tell me who's coming
+24/12/16, 22:30 - Pranay Saksena: 800 Outside amitabh bachhans bungalow
+24/12/16, 22:31 - Kanika Malkani: Ok
+24/12/16, 22:31 - Pranay Saksena: Pranay
+Shubhma
+Prisha J 
+Riva 
+Kanika
+Preksha
+24/12/16, 22:32 - Kanika Malkani: 👍🏻
+24/12/16, 22:52 - Kanika Malkani: Shubhma😂
+25/12/16, 00:03 - Pranay Saksena: Time changed to 7 45
+25/12/16, 00:22 - Kanika Malkani: Riva is not coming
+25/12/16, 00:23 - Kanika Malkani: I also might not come.
+29/12/16, 18:49 - Kanika Malkani: Hello
+29/12/16, 18:50 - Kanika Malkani: We have to really plan something for new year
+29/12/16, 18:50 - Kanika Malkani: Lunch or some evening party
+29/12/16, 20:22 - Pranay Saksena: Minions grp??
+29/12/16, 20:22 - Pranay Saksena: Let's form another selective group
+29/12/16, 20:23 - Pranay Saksena: I'm free
+29/12/16, 21:07 - Kanika Malkani: Yeah
+29/12/16, 21:52 - Kanika Malkani: Jamjar on Saturday?
+29/12/16, 22:28 - Pranay Saksena: Dunno
+29/12/16, 22:29 - Pranay Saksena: Pls can we plan some park or something?
+29/12/16, 22:48 - Kanika Malkani: Don't we always go to the park?
+29/12/16, 22:49 - Kanika Malkani: Better to do a meal outing
+29/12/16, 22:49 - Kanika Malkani: And vaise bhi I'm not the leader up there
+29/12/16, 22:50 - Kanika Malkani: Go give your suggestions on the group
+29/12/16, 23:02 - Kanika Malkani: Toh Saturday?
+29/12/16, 23:08 - Pranay Saksena: Maybe yes
+30/12/16, 19:44 - Kanika Malkani: Definitely coming right?
+30/12/16, 20:06 - Pranay Saksena: Yup
+30/12/16, 22:45 - Kanika Malkani: Tomorrow 5:00 at chacha nehru park
+30/12/16, 22:45 - Kanika Malkani: Ok?
+05/01/17, 14:07 - Kanika Malkani: What did you'll do in school today?
+05/01/17, 14:11 - Pranay Saksena: After 5. Sorry
+05/01/17, 15:07 - Pranay Saksena: Chem/Eng: Chem notes
+05/01/17, 15:07 - Pranay Saksena: Drama project given
+05/01/17, 15:07 - Pranay Saksena: Maths geometry questions given
+05/01/17, 15:07 - Pranay Saksena: ICT database validation
+PPT to be completed by next week
+05/01/17, 15:07 - Pranay Saksena: Pe heats
+05/01/17, 15:07 - Pranay Saksena: Will send pics by 530
+05/01/17, 16:38 - Kanika Malkani: Ok
+05/01/17, 16:38 - Kanika Malkani: And thanks a lot!
+05/01/17, 19:19 - Pranay Saksena: <Media omitted>
+05/01/17, 19:19 - Pranay Saksena: Drama project for Narnia
+05/01/17, 19:20 - Pranay Saksena: <Media omitted>
+05/01/17, 19:20 - Pranay Saksena: <Media omitted>
+05/01/17, 19:20 - Pranay Saksena: <Media omitted>
+05/01/17, 19:21 - Pranay Saksena: <Media omitted>
+05/01/17, 19:21 - Pranay Saksena: <Media omitted>
+05/01/17, 19:21 - Pranay Saksena: Maths
+Define Acute, Obtuse, right angles and their triangles
+05/01/17, 19:21 - Pranay Saksena: And also reflex
+05/01/17, 19:21 - Pranay Saksena: Angles
+05/01/17, 19:21 - Pranay Saksena: Three types of triangles
+05/01/17, 19:21 - Pranay Saksena: Congruent and similar triangles
+05/01/17, 19:21 - Pranay Saksena: Quadrilaterals, and each type of quadrilateral
+05/01/17, 19:21 - Pranay Saksena: Sorry for the delay
+05/01/17, 19:23 - Kanika Malkani: It's okay
+05/01/17, 19:24 - Kanika Malkani: And is this maths Homework? 👆🏻
+Or did you'll do it?
+05/01/17, 19:24 - Pranay Saksena: Hw
+05/01/17, 19:24 - Kanika Malkani: Okay
+05/01/17, 19:25 - Kanika Malkani: Thanks!
+05/01/17, 19:26 - Pranay Saksena: Welcome
+05/01/17, 19:31 - Kanika Malkani: Also one more favour.
+05/01/17, 19:32 - Kanika Malkani: Can you send me the ict database validation through email?
+05/01/17, 19:32 - Pranay Saksena: Miss just showed us
+05/01/17, 19:32 - Pranay Saksena: Actually there's nothing much
+05/01/17, 19:32 - Kanika Malkani: Oh
+05/01/17, 19:33 - Pranay Saksena: In the field properties you set a validation rule and note
+05/01/17, 19:33 - Pranay Saksena: Sorted?
+05/01/17, 19:34 - Kanika Malkani: Yes
+05/01/17, 19:34 - Pranay Saksena: Anything else?
+05/01/17, 19:34 - Pranay Saksena: Madame-de-flour?
+05/01/17, 20:46 - Kanika Malkani: So i guess this should be the order for the notes:
+Uses of electrolysis
+Silver Anode
+Chlorine
+Extraction of aluminium
+05/01/17, 21:01 - Pranay Saksena: Ya
+09/01/17, 18:25 - Pranay Saksena: Hey I guess you are roll no 9
+09/01/17, 18:25 - Pranay Saksena: .....
+09/01/17, 18:26 - Pranay Saksena: What is our bio ppt project topic?
+09/01/17, 20:01 - Kanika Malkani: Yeahh.
+09/01/17, 20:03 - Kanika Malkani: Explain process of vaccination
+Include memory cells and antibodies generation etc.
+09/01/17, 20:20 - Kanika Malkani: Submission on Saturday
+09/01/17, 20:21 - Kanika Malkani: Dev and vishwam have got the same topic
+09/01/17, 20:55 - Pranay Saksena: Saturday to whom and how?
+09/01/17, 23:17 - Kanika Malkani: To seema miss
+09/01/17, 23:17 - Kanika Malkani: Through email...
+09/01/17, 23:34 - Pranay Saksena: 👍🏼
+14/01/17, 08:57 - Kanika Malkani: Aren't we dead right now?
+14/01/17, 09:03 - Kanika Malkani: I have found the information but have to make the ppt
+14/01/17, 09:04 - Kanika Malkani: Also, send me more information on antibody generation
+14/01/17, 11:30 - Pranay Saksena: Shit.
+14/01/17, 11:30 - Pranay Saksena: Is any specific time told by miss to submit before?
+14/01/17, 12:37 - Kanika Malkani: No
+14/01/17, 20:15 - Kanika Malkani: Did you send the ppt?
+14/01/17, 20:18 - Pranay Saksena: Nah, will send u and miss by 10
+14/01/17, 20:18 - Kanika Malkani: Okk
+14/01/17, 21:33 - Pranay Saksena: Hey
+14/01/17, 21:34 - Pranay Saksena: Ppt is not working in my laptop, nor is anything of MS Office
+14/01/17, 21:34 - Pranay Saksena: I'll send you some info in a while, pls add it to the ppt and send it. Sorry for the inconvenience.
+14/01/17, 21:35 - Pranay Saksena: What exactly do I have to search info of, that you weren't able to get?
+18/01/17, 19:07 - Pranay Saksena: Hey can you pls send the physics notes of today?
+18/01/17, 20:26 - Pranay Saksena: That's your mom?
+18/01/17, 20:28 - Kanika Malkani: No
+18/01/17, 20:29 - Kanika Malkani: Brother
+18/01/17, 20:31 - Pranay Saksena: Thanks
+18/01/17, 20:31 - Kanika Malkani: 👍🏻👍🏻
+18/01/17, 20:31 - Pranay Saksena: Is that it,
+18/01/17, 20:32 - Pranay Saksena: ?
+18/01/17, 20:32 - Kanika Malkani: Ahaa
+18/01/17, 20:32 - Kanika Malkani: Drawings
+18/01/17, 20:32 - Pranay Saksena: K then
+18/01/17, 20:32 - Kanika Malkani: Friday bring your workbook
+18/01/17, 20:32 - Pranay Saksena: Are you submitting drama project tom
+18/01/17, 20:33 - Kanika Malkani: Nope
+18/01/17, 20:33 - Pranay Saksena: 👍🏼
+18/01/17, 20:33 - Pranay Saksena: What will you do
+18/01/17, 20:34 - Kanika Malkani: Don't you know what happened in e division today?
+18/01/17, 20:34 - Pranay Saksena: Yes I do
+18/01/17, 20:34 - Kanika Malkani: The whole class won't do it
+18/01/17, 20:34 - Pranay Saksena: Somewhat
+18/01/17, 20:34 - Kanika Malkani: At all
+18/01/17, 20:35 - Pranay Saksena: ????
+18/01/17, 20:35 - Kanika Malkani: Class unity
+18/01/17, 20:35 - Kanika Malkani: I'm doing nothing
+18/01/17, 20:36 - Pranay Saksena: Okay
+18/01/17, 20:37 - Kanika Malkani: Done with the ict printout?
+18/01/17, 20:37 - Pranay Saksena: Nah
+18/01/17, 20:37 - Pranay Saksena: Elocution bunk
+18/01/17, 20:37 - Kanika Malkani: Ohh
+18/01/17, 20:38 - Kanika Malkani: Wait.....you're not in Gujarati elocution are you?
+18/01/17, 20:38 - Pranay Saksena: 😂
+18/01/17, 20:38 - Kanika Malkani: Its 8-9-10period
+18/01/17, 20:39 - Pranay Saksena: I go from 6th period onwards
+18/01/17, 20:40 - Kanika Malkani: Bunking and all na
+18/01/17, 20:40 - Kanika Malkani: 😏😏
+18/01/17, 20:40 - Pranay Saksena: Now you know I'm not padhaku
+18/01/17, 20:41 - Pranay Saksena: ........
+18/01/17, 20:41 - Kanika Malkani: Mass bunking sab ko pasand hai
+18/01/17, 20:41 - Kanika Malkani: Padhaaku ko bhi
+18/01/17, 20:41 - Kanika Malkani: 😏😏😏
+18/01/17, 20:41 - Pranay Saksena: It's not mass
+18/01/17, 20:42 - Kanika Malkani: 😂😂😂😂
+18/01/17, 20:42 - Pranay Saksena: Two people (with no mass) are bunking
+18/01/17, 20:42 - Pranay Saksena: Me and roham
+18/01/17, 20:42 - Pranay Saksena: N
+18/01/17, 20:43 - Kanika Malkani: 😑😑
+18/01/17, 20:43 - Kanika Malkani: Bas bas
+18/01/17, 20:43 - Pranay Saksena: 😬
+22/01/17, 18:55 - Kanika Malkani: Hello
+22/01/17, 18:55 - Kanika Malkani: Got your laptop back?
+22/01/17, 18:57 - Kanika Malkani: https://www.youtube.com/watch?v=rb7TVW77ZCs
+22/01/17, 18:57 - Kanika Malkani: Watch this video.
+22/01/17, 18:58 - Kanika Malkani: also i am sending the ppt to seema miss.
+22/01/17, 19:59 - Pranay Saksena: 👍🏼 Okay
+23/01/17, 20:36 - Kanika Malkani: Hi
+23/01/17, 20:36 - Kanika Malkani: How do we divide the work?
+23/01/17, 20:37 - Kanika Malkani: And i did send you the mail
+23/01/17, 20:39 - Kanika Malkani: You do the 2 & 4 the slide
+23/01/17, 20:39 - Kanika Malkani: I'll do 3rd and 5th
+23/01/17, 20:40 - Kanika Malkani: Its too filled up
+23/01/17, 20:40 - Kanika Malkani: Just check and tell me
+23/01/17, 21:13 - Pranay Saksena: We'll not be presenting before wed
+23/01/17, 21:13 - Pranay Saksena: So I'll tell you tom?
+23/01/17, 21:13 - Pranay Saksena: Am a bit busy.....
+25/01/17, 17:34 - Pranay Saksena: Pls send todays physics notes.
+25/01/17, 18:52 - Kanika Malkani: <Media omitted>
+25/01/17, 18:52 - Kanika Malkani: <Media omitted>
+25/01/17, 18:52 - Kanika Malkani: <Media omitted>
+25/01/17, 18:52 - Kanika Malkani: <Media omitted>
+25/01/17, 18:52 - Kanika Malkani: <Media omitted>
+25/01/17, 19:12 - Pranay Saksena: Thanks. Will prepare bio ppt explanation. Please can you send me your research bank (like the total material you previously had for this project from which you filtered info to put in this)?
+Do you mind?
+27/01/17, 20:21 - Kanika Malkani: Ok so.... Learn the first slide( vaccination) and third one (antibody generation)
+27/01/17, 20:24 - Pranay Saksena: Let's do topic wise na
+27/01/17, 20:24 - Pranay Saksena: You do one topic I do the other
+27/01/17, 20:24 - Pranay Saksena: ????
+27/01/17, 20:26 - Kanika Malkani: Yaa that's how it is
+27/01/17, 20:26 - Kanika Malkani: So there are 4 slides of information
+27/01/17, 20:27 - Kanika Malkani: 1. vaccination
+2. Vaccination(c)
+3. Antibody.......
+4.memory cells
+27/01/17, 22:11 - Pranay Saksena: Person 1: Slide 1 and 2
+Person 2: Slide 3 and 4
+27/01/17, 22:11 - Pranay Saksena: Is that how you're telling?
+27/01/17, 23:33 - Kanika Malkani: Nahi
+27/01/17, 23:33 - Kanika Malkani: Person 1 Slide- 1&3
+Person 2- 2&4
+27/01/17, 23:33 - Kanika Malkani: And check the new ppt i just sent
+27/01/17, 23:33 - Pranay Saksena: Okay
+27/01/17, 23:34 - Kanika Malkani: It has a bigger font and so more slides
+27/01/17, 23:34 - Pranay Saksena: 😂
+27/01/17, 23:34 - Pranay Saksena: Okay
+27/01/17, 23:35 - Pranay Saksena: Will check it tomorrow
+27/01/17, 23:35 - Kanika Malkani: Should i sent it to you idhar?
+27/01/17, 23:35 - Pranay Saksena: Nah it's ok
+27/01/17, 23:35 - Pranay Saksena: Are you comin tomorrow
+27/01/17, 23:35 - Kanika Malkani: To?
+27/01/17, 23:35 - Pranay Saksena: Park
+27/01/17, 23:36 - Kanika Malkani: Good night
+27/01/17, 23:36 - Kanika Malkani: 😂😂
+27/01/17, 23:36 - Pranay Saksena: Exactly 😂
+Good nighty
+27/01/17, 23:36 - Pranay Saksena: Night* 😂
+27/01/17, 23:37 - Kanika Malkani: You go to the park with some friends who aren't bored with it
+27/01/17, 23:37 - Kanika Malkani: 👅👅
+27/01/17, 23:37 - Kanika Malkani: Check the ppt kal
+27/01/17, 23:37 - Pranay Saksena: 👍🏼
+27/01/17, 23:38 - Pranay Saksena: Chalo bye
+27/01/17, 23:38 - Kanika Malkani: Bye
+28/01/17, 13:09 - Kanika Malkani: Checked?
+28/01/17, 14:06 - Pranay Saksena: Yes, am doing some amendments, will send final
+28/01/17, 15:11 - Kanika Malkani: And i have sent you all the resources about a week ago
+28/01/17, 15:12 - Pranay Saksena: Ya
+28/01/17, 15:12 - Pranay Saksena: Thanks
+28/01/17, 15:12 - Kanika Malkani: Send it ASAP
+28/01/17, 19:22 - Pranay Saksena: Sent
+28/01/17, 22:05 - Kanika Malkani: What changes did you mak
+28/01/17, 22:06 - Kanika Malkani: Make?*
+28/01/17, 22:06 - Pranay Saksena: Check na
+28/01/17, 22:06 - Kanika Malkani: I did
+28/01/17, 22:09 - Kanika Malkani: Made the font smaller?🤔
+28/01/17, 22:09 - Kanika Malkani: And added a slide
+28/01/17, 22:09 - Pranay Saksena: NOO
+28/01/17, 22:10 - Kanika Malkani: Yeah!😶
+28/01/17, 22:16 - Kanika Malkani: You rearranged it
+28/01/17, 22:16 - Kanika Malkani: It's all very confusing abhi
+28/01/17, 22:16 - Pranay Saksena: LOL
+28/01/17, 22:16 - Kanika Malkani: And i had 11slides
+28/01/17, 22:16 - Pranay Saksena: I put it in order
+28/01/17, 22:16 - Pranay Saksena: No
+28/01/17, 22:16 - Kanika Malkani: You deleted one
+28/01/17, 22:16 - Pranay Saksena: Ya I deleted one
+28/01/17, 22:17 - Pranay Saksena: Can you pls not tell me what I did
+28/01/17, 22:17 - Pranay Saksena: And pls specify if there is any problem
+28/01/17, 22:19 - Kanika Malkani: Noo
+28/01/17, 22:20 - Kanika Malkani: It just took way too long to figure out what you changed
+28/01/17, 22:20 - Kanika Malkani: And now how do we decide the slides
+28/01/17, 22:20 - Pranay Saksena: Oh come on
+28/01/17, 22:21 - Pranay Saksena: Please
+28/01/17, 22:21 - Kanika Malkani: And you also removed some transitions
+28/01/17, 22:21 - Pranay Saksena: Let's do topic wise
+28/01/17, 22:21 - Pranay Saksena: I did no change to design and formatting
+28/01/17, 22:21 - Pranay Saksena: Only info
+28/01/17, 22:21 - Kanika Malkani: I think
+28/01/17, 22:22 - Pranay Saksena: Let's do topic wise
+28/01/17, 22:22 - Kanika Malkani: Well whatever
+28/01/17, 22:23 - Kanika Malkani: Ok so I'll do vaccination and memory cells
+28/01/17, 22:23 - Pranay Saksena: LOL
+28/01/17, 22:23 - Kanika Malkani: Your doing one vaccination slide and antibody generation
+28/01/17, 22:24 - Pranay Saksena: PLEASE LET'S JUST DO TOPIC WISE
+28/01/17, 22:24 - Pranay Saksena: !!!!
+28/01/17, 22:25 - Pranay Saksena: I do vaccination (one topic cause it's large)
+28/01/17, 22:25 - Pranay Saksena: You do the rest two (2 because they're small)
+28/01/17, 22:25 - Kanika Malkani: i didnt really understand antibody......
+28/01/17, 22:27 - Kanika Malkani: And last day pe don't change
+28/01/17, 22:27 - Kanika Malkani: 😶😶
+28/01/17, 22:27 - Pranay Saksena: I'm not changing anything
+28/01/17, 22:27 - Kanika Malkani: scroll up
+28/01/17, 22:27 - Pranay Saksena: Cause nothing was ever decided
+28/01/17, 22:28 - Pranay Saksena: It constantly changed
+28/01/17, 22:29 - Pranay Saksena: Plus even I didnt understand antibody
+28/01/17, 22:29 - Kanika Malkani: 😂😂😂
+28/01/17, 22:29 - Kanika Malkani: Lets ditch antibodies
+28/01/17, 22:29 - Pranay Saksena: Point is I read vacc properly from a good source and can explain it well
+28/01/17, 22:30 - Kanika Malkani: Ohh quite the same reason
+28/01/17, 22:30 - Kanika Malkani: Your good in explaining
+28/01/17, 22:30 - Pranay Saksena: ???
+28/01/17, 22:30 - Kanika Malkani: You can do it Pranay saksena
+28/01/17, 22:35 - Kanika Malkani: Okk
+28/01/17, 22:35 - Pranay Saksena: ???
+28/01/17, 22:35 - Kanika Malkani: I'm doing it😏😏
+28/01/17, 22:36 - Pranay Saksena: Do what
+28/01/17, 22:36 - Kanika Malkani: 😔😔😲😲😧😧😰😰😠😠
+28/01/17, 22:36 - Pranay Saksena: It?
+28/01/17, 22:36 - Kanika Malkani: Antibody
+28/01/17, 22:36 - Kanika Malkani: Bye
+28/01/17, 22:36 - Kanika Malkani: Ihy😒😒
+28/01/17, 22:36 - Pranay Saksena: ????
+28/01/17, 22:37 - Pranay Saksena: I'm sorry but I have no idea what's going on here.
+28/01/17, 22:37 - Pranay Saksena: ???
+28/01/17, 22:41 - Kanika Malkani: Good Night💤💤
+28/01/17, 22:41 - Pranay Saksena: Ya fine
+28/01/17, 22:41 - Pranay Saksena: Good Night
+01/02/17, 15:07 - Kanika Malkani: Hi
+01/02/17, 15:07 - Kanika Malkani: What was done in school today?
+01/02/17, 15:07 - Pranay Saksena: Bio: Quiz
+01/02/17, 15:08 - Pranay Saksena: Maths: Loci. Doubts solving sessions dates given
+01/02/17, 15:08 - Pranay Saksena: English: Difference between argu and discurs explained
+01/02/17, 15:09 - Pranay Saksena: Submit Steve novicki along with penguin argumentative
+01/02/17, 15:09 - Pranay Saksena: SSP: good explanation (first time class full quiet and enjoyed)
+01/02/17, 15:10 - Pranay Saksena: Physics: EOC sound discussed few answers left. 1 ws solved and notes continued
+01/02/17, 15:12 - Pranay Saksena: ICT yaad nahi
+01/02/17, 15:12 - Pranay Saksena: Will send phy notes by 6
+01/02/17, 15:14 - Pranay Saksena: PPT was going to happen today and miss asked me to do it myself but luckily school server was down
+01/02/17, 15:37 - Kanika Malkani: Thanks a lot.
+01/02/17, 15:37 - Kanika Malkani: Bio was just a random quiz?
+01/02/17, 15:38 - Kanika Malkani: And what's the penguin argumentative about?
+01/02/17, 15:39 - Kanika Malkani: Did she complete Loci?
+01/02/17, 15:42 - Kanika Malkani: Ict yaad karo
+01/02/17, 20:12 - Pranay Saksena: Ya
+01/02/17, 20:13 - Pranay Saksena: Write an argu against woollen sweaters
+01/02/17, 20:13 - Pranay Saksena: Ya and we won (I made us win)
+01/02/17, 22:32 - Kanika Malkani: Itna showoff?
+01/02/17, 22:33 - Kanika Malkani: U are definitely trying to prove that you are 'padakhu'
+01/02/17, 22:36 - Pranay Saksena: Arey joking re!!
+01/02/17, 22:36 - Pranay Saksena: The row made itself win
+01/02/17, 22:37 - Kanika Malkani: Ha haa
+01/02/17, 22:37 - Pranay Saksena: Including me
+01/02/17, 22:37 - Kanika Malkani: I know it
+01/02/17, 22:37 - Pranay Saksena: 😬
+01/02/17, 22:37 - Kanika Malkani: Padakhuuu
+01/02/17, 22:37 - Kanika Malkani: 👅
+01/02/17, 22:37 - Pranay Saksena: #FullOnIgnoring
+01/02/17, 22:38 - Pranay Saksena: #Kanika #Real Padhaku
+01/02/17, 22:38 - Kanika Malkani: U think?
+01/02/17, 22:39 - Kanika Malkani: Bye padaakhuuuu
+01/02/17, 22:39 - Pranay Saksena: #DoIThink
+01/02/17, 22:39 - Kanika Malkani: Go study👅👅😂😂
+01/02/17, 22:39 - Kanika Malkani: #yeahyoudo
+01/02/17, 22:39 - Kanika Malkani: #maybeMorethanEinstein
+01/02/17, 22:39 - Kanika Malkani: #😂😂
+01/02/17, 22:39 - Pranay Saksena: #2tongueswhichhavenouse
+01/02/17, 22:40 - Kanika Malkani: *LOL*
+01/02/17, 22:40 - Pranay Saksena: #bold
+01/02/17, 22:40 - Kanika Malkani: And the padakhuu of the year is.............
+01/02/17, 22:40 - Pranay Saksena: #KanikaMalkani
+01/02/17, 22:40 - Kanika Malkani: #PranaySaksena
+01/02/17, 22:40 - Pranay Saksena: #TheNationWantsToKnow
+01/02/17, 22:41 - Kanika Malkani: ~kanika~
+01/02/17, 22:41 - Pranay Saksena: #KanikaIsDead
+01/02/17, 22:41 - Pranay Saksena: #PARTY
+01/02/17, 22:41 - Kanika Malkani: 😒😒😒😔😔😔
+01/02/17, 22:41 - Kanika Malkani: Go
+01/02/17, 22:41 - Kanika Malkani: Kill mee
+01/02/17, 22:42 - Pranay Saksena: #THE WORLD IS A BETTER PLACE
+01/02/17, 22:42 - Kanika Malkani: Isiliye tumhari maa ne pedhaa kiyaa tha?
+01/02/17, 22:42 - Kanika Malkani: Logo ko maarne ke liye
+01/02/17, 22:42 - Pranay Saksena: #KyaHogaIsDeshKa
+01/02/17, 22:42 - Kanika Malkani: #KanikaMAlkanispatheticenglish
+01/02/17, 22:43 - Pranay Saksena: #NothingUntilKanikaExists
+01/02/17, 22:43 - Pranay Saksena: #😬
+01/02/17, 22:43 - Kanika Malkani: 😑😑😑
+01/02/17, 22:43 - Pranay Saksena: #KanikaBlankFace
+01/02/17, 22:44 - Kanika Malkani: Nobody more padhakuuu till pranay alive
+01/02/17, 22:44 - Kanika Malkani: #🙂🙂🙂
+01/02/17, 22:44 - Pranay Saksena: #KanikaRohanshareoneface
+01/02/17, 22:44 - Kanika Malkani: #straightface
+01/02/17, 22:44 - Kanika Malkani: Lol dude
+01/02/17, 22:45 - Pranay Saksena: #LOL #'Dabbing right now'
+01/02/17, 22:45 - Kanika Malkani: And a billion more people everyday with a straight face
+01/02/17, 22:45 - Kanika Malkani: #pranaybadatdab
+01/02/17, 22:45 - Pranay Saksena: #Pig 🐷
+01/02/17, 22:45 - Kanika Malkani: #😂
+01/02/17, 22:46 - Kanika Malkani: #💩pranay
+01/02/17, 22:46 - Kanika Malkani: #🦄me
+01/02/17, 22:46 - Pranay Saksena: #AlooKeParathe
+01/02/17, 22:46 - Pranay Saksena: #RandomHashtaga
+01/02/17, 22:46 - Kanika Malkani: #irrelevant
+01/02/17, 22:46 - Pranay Saksena: Tags*
+01/02/17, 22:47 - Pranay Saksena: #SonamGuptaBewafa
+01/02/17, 22:47 - Kanika Malkani: 😂😂😂
+01/02/17, 22:47 - Kanika Malkani: #1stfebBudgetday
+01/02/17, 22:47 - Pranay Saksena: #KatappaNeBahubaliKoKyuMara
+01/02/17, 22:48 - Kanika Malkani: #indiawontheT20series
+01/02/17, 22:48 - Kanika Malkani: #yuzvendrachahel
+01/02/17, 22:48 - Pranay Saksena: Woooohoooooo!!!!!
+01/02/17, 22:48 - Pranay Saksena: Nacho
+01/02/17, 22:48 - Pranay Saksena: !!!
+01/02/17, 22:48 - Kanika Malkani: Wohh bhi nahi dekha?
+01/02/17, 22:48 - Pranay Saksena: 🎊🎊🎊🎊
+01/02/17, 22:48 - Kanika Malkani: Padhakkuuuuuuuuuu
+01/02/17, 22:48 - Pranay Saksena: Dekha
+01/02/17, 22:49 - Pranay Saksena: Remembered again right now
+01/02/17, 22:49 - Pranay Saksena: #RegainedHappiness
+01/02/17, 22:49 - Pranay Saksena: #RELIVINGMOMENTS
+01/02/17, 22:49 - Kanika Malkani: I know the facts Pranay
+01/02/17, 22:49 - Kanika Malkani: 😎😎😎
+01/02/17, 22:49 - Kanika Malkani: Nahi dekha
+01/02/17, 22:49 - Pranay Saksena: ???
+01/02/17, 22:49 - Pranay Saksena: Kanika I am a BOY
+01/02/17, 22:49 - Kanika Malkani: Instead book ke 2 chapters padh liye
+01/02/17, 22:50 - Kanika Malkani: I know toh?
+01/02/17, 22:50 - Pranay Saksena: BOYS= CRAZY FOR CRICKET #BLEEDBLUE #CRICKETOVER LIFE
+01/02/17, 22:51 - Pranay Saksena: #CRICKETISLOVE
+01/02/17, 22:51 - Pranay Saksena: #BYE
+01/02/17, 22:51 - Kanika Malkani: Not all guys haa
+01/02/17, 22:51 - Kanika Malkani: Football freak?
+01/02/17, 22:51 - Kanika Malkani: Bye
+01/02/17, 22:51 - Pranay Saksena: Nah
+01/02/17, 22:52 - Kanika Malkani: Toh your not a boy
+01/02/17, 22:52 - Kanika Malkani: 😁😁😁😁
+01/02/17, 22:52 - Kanika Malkani: Don't apply mummy logic idhar
+01/02/17, 22:52 - Pranay Saksena: Mummy logic?
+01/02/17, 22:52 - Kanika Malkani: Guy hai toh cricket
+01/02/17, 22:53 - Pranay Saksena: 😂
+01/02/17, 22:53 - Pranay Saksena: Okay Sorry 😂
+01/02/17, 22:53 - Pranay Saksena: Chalo Bye
+01/02/17, 22:53 - Pranay Saksena: Goodnight 😴💤
+01/02/17, 22:53 - Kanika Malkani: Byee
+06/02/17, 21:17 - Pranay Saksena: Hey pls send your confirmation for the MUN. If yes then send your committee preference and details.
+07/02/17, 17:40 - Pranay Saksena: Pls send your details for the MUN. Details include:
+Mobile No.
+Email ID
+Preferred committee
+DOB
+07/02/17, 18:15 - Kanika Malkani: So, just a query
+07/02/17, 18:16 - Kanika Malkani: We only have an option between UNEA and SPECPOL?
+07/02/17, 18:17 - Kanika Malkani: And we don't have to register do we?
+07/02/17, 18:18 - Kanika Malkani: Kanika Malkani
+9820109936
+kanika.malkani1@gmail.com
+Confused!
+09/07/2002
+07/02/17, 18:20 - Pranay Saksena: Don't register, regsiration will be done from the school if school agrees.
+07/02/17, 18:20 - Pranay Saksena: That's why there's all these talks about the MUN, or else I would've registered and went alone 😜
+07/02/17, 18:21 - Pranay Saksena: Go to the site and read the agenda, whichever is more interesting go for that one.
+07/02/17, 18:21 - Pranay Saksena: And do that in two mins!
+07/02/17, 18:22 - Pranay Saksena: 😠
+07/02/17, 18:22 - Kanika Malkani: I did
+07/02/17, 18:22 - Pranay Saksena: Decide in 2mins
+07/02/17, 18:22 - Kanika Malkani: I just wanted to do which was not for school.....blahhh
+07/02/17, 18:22 - Pranay Saksena: !!
+07/02/17, 18:22 - Pranay Saksena: Arey jaldi madam
+07/02/17, 18:22 - Kanika Malkani: UNSRM IS SO MUCH FUN
+07/02/17, 18:23 - Kanika Malkani: GIVE ME MY 2 MINS!?
+07/02/17, 18:23 - Kanika Malkani: I'll go with UNEA
+07/02/17, 18:24 - Pranay Saksena: Done👍🏼
+07/02/17, 20:24 - Kanika Malkani: <Media omitted>
+07/02/17, 20:29 - Pranay Saksena: 😂
+07/02/17, 20:32 - Pranay Saksena: I don't know if you're relating to something
+07/02/17, 20:33 - Kanika Malkani: Get your inferences right
+07/02/17, 20:34 - Pranay Saksena: Sorry if you're really sad these days (note the sarcasm)
+07/02/17, 20:34 - Kanika Malkani: Really?
+07/02/17, 20:34 - Kanika Malkani: LOL😂😂
+12/02/17, 19:09 - Kanika Malkani: Pranay Saksena remember 2 weeks ago i had not come to school. You didn't send me the physics notes yet!!!
+13/02/17, 16:46 - Pranay Saksena: Sorry😟😨
+13/02/17, 16:47 - Pranay Saksena: But I don't remember which physics notes were they 😕😬
+13/02/17, 18:28 - Kanika Malkani: Yeah gr8
+13/02/17, 18:31 - Kanika Malkani: <Media omitted>
+13/02/17, 18:31 - Kanika Malkani: Your birthday gift😂😂😂
+13/02/17, 18:33 - Pranay Saksena: 😑😐😒🙄
+13/02/17, 18:33 - Kanika Malkani: 👅👅👅👅
+14/02/17, 18:14 - Kanika Malkani: What did you'll do for the rest of the day?
+14/02/17, 18:17 - Pranay Saksena: From where
+14/02/17, 18:17 - Pranay Saksena: English I wasn't there
+14/02/17, 18:33 - Pranay Saksena: Control Applications ppt
+14/02/17, 18:33 - Pranay Saksena: ICT
+14/02/17, 18:33 - Pranay Saksena: Physics 1 atp ws
+14/02/17, 18:34 - Pranay Saksena: Chem: 1 sum😂
+14/02/17, 18:34 - Pranay Saksena: Bio free
+14/02/17, 18:35 - Pranay Saksena: Yoga free
+14/02/17, 19:09 - Kanika Malkani: Thanks
+17/02/17, 18:05 - Pranay Saksena: <Media omitted>
+17/02/17, 18:05 - Pranay Saksena: Look what I found👆🏼
+17/02/17, 19:50 - Kanika Malkani: Awww😂😂😂😂
+17/02/17, 19:53 - Kanika Malkani: Is it from our class?
+17/02/17, 19:53 - Kanika Malkani: Free abhi?
+17/02/17, 19:54 - Pranay Saksena: Ya it is 😂
+17/02/17, 19:54 - Pranay Saksena: It belongs to the 2 maddies who sit right behind me 😂
+17/02/17, 19:55 - Kanika Malkani: Looks like Sakshi's handwritin
+17/02/17, 19:55 - Kanika Malkani: What??? Noo
+17/02/17, 19:55 - Kanika Malkani: Sakshi and Khushi
+17/02/17, 19:55 - Kanika Malkani: Definitely
+17/02/17, 19:55 - Pranay Saksena: One handwriting is Dungus for sure
+17/02/17, 19:56 - Kanika Malkani: Saksh and dung had a date together😂😂😂
+17/02/17, 19:56 - Kanika Malkani: are you free abhi?
+17/02/17, 19:56 - Pranay Saksena: 😂😂
+17/02/17, 19:56 - Pranay Saksena: Not really, what happened?
+17/02/17, 19:57 - Kanika Malkani: I'm bored😢😢😢
+17/02/17, 19:57 - Pranay Saksena: Im studying for MUN
+17/02/17, 19:57 - Kanika Malkani: Okay
+17/02/17, 19:57 - Kanika Malkani: Alvida
+17/02/17, 19:57 - Pranay Saksena: What have you planned for vidhitas party?
+17/02/17, 19:58 - Kanika Malkani: Nothing much.....a surprise party😂😂😒😒
+17/02/17, 19:58 - Pranay Saksena: USGS PTA 😂
+17/02/17, 19:58 - Pranay Saksena: Iska kya matlab hai?
+17/02/17, 19:58 - Kanika Malkani: Yeah couldn't think of anything else
+17/02/17, 19:59 - Kanika Malkani: What if Vidhita checks her mum's phone?
+17/02/17, 19:59 - Kanika Malkani: She usually does
+17/02/17, 19:59 - Pranay Saksena: Vidhitas mom is in the grp?
+17/02/17, 19:59 - Kanika Malkani: Just added
+17/02/17, 19:59 - Kanika Malkani: Hey guys,
+So this group is made for a surprise party for Vidhita on the 20th Feb- this Monday. We will be going to her house at 6:30-7:00. Give a thumbs up if your in.
+P.S- I'll be soon changing the group name cause i have to add Vidhita's mom to get her updated on this.
+17/02/17, 19:59 - Pranay Saksena: Are you crazy 😳😳
+17/02/17, 20:00 - Kanika Malkani: You never read the P.S?
+17/02/17, 20:00 - Pranay Saksena: Nah.
+17/02/17, 20:00 - Kanika Malkani: 😒😒😒
+17/02/17, 20:00 - Pranay Saksena: But we can call her mom after a fixed plan with fixed ppl is made
+17/02/17, 20:00 - Kanika Malkani: Uhh......no
+17/02/17, 20:01 - Pranay Saksena: Her mom will not feel good about constant discussions and change of plans happening on our grp.
+17/02/17, 20:01 - Kanika Malkani: We aren't changing any plan
+17/02/17, 20:01 - Pranay Saksena: Cause we haven't made any
+17/02/17, 20:01 - Pranay Saksena: 😂
+17/02/17, 20:01 - Kanika Malkani: I asked her....she said yes
+17/02/17, 20:02 - Kanika Malkani: Also I'm organizing this according to her tuition timings so who ever can make it in time will.......others will come baadmein
+17/02/17, 20:03 - Kanika Malkani: Get it?
+17/02/17, 20:03 - Kanika Malkani: You'll come in time
+17/02/17, 20:03 - Pranay Saksena: Ya
+17/02/17, 20:03 - Pranay Saksena: What time?
+17/02/17, 20:04 - Kanika Malkani: Kuch nahi
+17/02/17, 20:04 - Pranay Saksena: Pls keep it before 7 cause....
+17/02/17, 20:04 - Pranay Saksena: Someone shares her bday....
+17/02/17, 20:04 - Kanika Malkani: Who?
+17/02/17, 20:04 - Kanika Malkani: A friend or relative?
+17/02/17, 20:05 - Pranay Saksena: Girlfriend😂
+17/02/17, 20:05 - Pranay Saksena: Arey my dad re 😂
+17/02/17, 20:06 - Kanika Malkani: I knew it!!!😂😂
+17/02/17, 20:06 - Kanika Malkani: Pranay had a secret girlfriend
+17/02/17, 20:07 - Kanika Malkani: Waqt aa gaya hai ki tum iss samaaj ko bataa do ki woh kaun hai
+17/02/17, 20:07 - Pranay Saksena: .........
+17/02/17, 20:07 - Kanika Malkani: Kaun hai jo tumhe itnaa padhaaku banaati hai?
+17/02/17, 20:07 - Kanika Malkani: Bataao hame
+17/02/17, 20:07 - Kanika Malkani: Hame jawaab chaahiye
+17/02/17, 20:07 - Kanika Malkani: .
+17/02/17, 20:07 - Kanika Malkani: .
+17/02/17, 20:07 - Kanika Malkani: .
+17/02/17, 20:08 - Kanika Malkani: .
+17/02/17, 20:08 - Kanika Malkani: .
+17/02/17, 20:08 - Kanika Malkani: .
+17/02/17, 20:08 - Kanika Malkani: .
+17/02/17, 20:08 - Kanika Malkani: .
+17/02/17, 20:08 - Pranay Saksena: Hmm.........
+19/02/17, 16:03 - Kanika Malkani: You will never acknowledge will you?
+19/02/17, 16:03 - Pranay Saksena: ???
+19/02/17, 16:05 - Kanika Malkani: You have read the messages on Vidhita's party group phir bhi no reply.
+19/02/17, 16:08 - Pranay Saksena: Sorry
+19/02/17, 16:09 - Pranay Saksena: But pls dont mind, I don't want to put anything on the grp though I'm willing to do it.
+19/02/17, 16:10 - Kanika Malkani: Toh message on pc na
+19/02/17, 16:10 - Pranay Saksena: Ya
+19/02/17, 16:11 - Pranay Saksena: 👍🏼
+19/02/17, 16:11 - Kanika Malkani: So Are finally coming or not?
+19/02/17, 16:11 - Kanika Malkani: You*
+19/02/17, 16:12 - Pranay Saksena: 👍🏼
+19/02/17, 16:12 - Kanika Malkani: Gr8
+19/02/17, 16:12 - Pranay Saksena: Tell me
+19/02/17, 16:12 - Pranay Saksena: Something to get her
+19/02/17, 16:12 - Kanika Malkani: Chocolates
+19/02/17, 16:12 - Kanika Malkani: She loves them.
+19/02/17, 16:13 - Pranay Saksena: Then make sure no one else gets any.
+19/02/17, 16:13 - Kanika Malkani: Hello
+19/02/17, 16:13 - Kanika Malkani: I'm bringing loads of them
+19/02/17, 16:14 - Pranay Saksena: And then she'll have a chocolate factory at her house.
+19/02/17, 16:14 - Pranay Saksena: ONE PERSON GET ONE KIND OF ITEM.
+19/02/17, 16:14 - Kanika Malkani: Kanika:I'm coming to your house
+Vidhita:Bring me a chocolate then😂
+19/02/17, 16:14 - Pranay Saksena: Unless it's greeting cards
+19/02/17, 16:14 - Kanika Malkani: Then think of something else
+19/02/17, 16:15 - Kanika Malkani: I have already bought chocolates
+19/02/17, 16:15 - Kanika Malkani: Anyway gtg
+19/02/17, 16:15 - Kanika Malkani: Good night🙈🙈
+19/02/17, 16:15 - Pranay Saksena: I guess I asked you to do that.
+19/02/17, 16:16 - Kanika Malkani: You have a mind.....no offence but I'm sure you'll come up with something.
+19/02/17, 16:16 - Kanika Malkani: Bye
+19/02/17, 16:16 - Pranay Saksena: Thanks. Bye.
+19/02/17, 16:22 - Kanika Malkani: Sorry.
+19/02/17, 16:26 - Kanika Malkani: Ok so my mind started working.....
+1-bring her an awesome pen
+2-get her some bracelet or something
+3- a perfume maybe
+4- and she would love if more and more people got her CHOCOLATES (Only if you don't mind........ And my brain shut right there
+19/02/17, 18:03 - Pranay Saksena: Silk Oreo?
+19/02/17, 18:04 - Kanika Malkani: Yeah
+19/02/17, 18:04 - Pranay Saksena: Ill see👍🏼
+19/02/17, 18:04 - Kanika Malkani: I have bought one tho....🙈
+19/02/17, 18:05 - Pranay Saksena: 😑
+19/02/17, 18:05 - Pranay Saksena: **Suicide**
+19/02/17, 18:06 - Kanika Malkani: 😂😂
+19/02/17, 18:06 - Kanika Malkani: Itna drama..... There are a billion chocolates out there🙂
+19/02/17, 18:07 - Pranay Saksena: Yeah right and only a million that I have heard of
+19/02/17, 18:07 - Kanika Malkani: Really?
+19/02/17, 18:08 - Pranay Saksena: Out of that only a thousand she's heard of
+19/02/17, 18:08 - Pranay Saksena: Out of that only a hundred that she likes
+19/02/17, 18:08 - Kanika Malkani: 😂😂😂
+19/02/17, 18:08 - Kanika Malkani: Hundred?? Too much.....
+19/02/17, 18:08 - Pranay Saksena: Out of that only ten that I can buy
+19/02/17, 18:08 - Pranay Saksena: ......
+19/02/17, 18:08 - Kanika Malkani: Itna kum?
+19/02/17, 18:09 - Kanika Malkani: You still have 9 options left
+19/02/17, 18:09 - Kanika Malkani: Okay?
+19/02/17, 18:10 - Pranay Saksena: ***Triple Suicide***
+19/02/17, 18:10 - Pranay Saksena: Revived again and then suicides again
+19/02/17, 18:10 - Pranay Saksena: ****
+19/02/17, 18:11 - Kanika Malkani: 😒😒😒
+19/02/17, 18:11 - Kanika Malkani: Think of something abhi
+19/02/17, 18:11 - Pranay Saksena: I will
+19/02/17, 18:11 - Kanika Malkani: I have to study......
+19/02/17, 18:11 - Pranay Saksena: And then get it...
+19/02/17, 18:11 - Pranay Saksena: Oka?
+19/02/17, 18:11 - Kanika Malkani: I helped you
+19/02/17, 18:12 - Kanika Malkani: Say thanks abhi
+19/02/17, 18:12 - Pranay Saksena: 🙏🏼🙏🏼Pay laagu👇🏼👇🏼
+19/02/17, 18:13 - Kanika Malkani: Mera aashirvaad tumhare saath hai
+19/02/17, 18:13 - Kanika Malkani: 🙌🏻✋🏻✋🏻✋🏻
+19/02/17, 18:13 - Pranay Saksena: Aata?
+19/02/17, 18:13 - Kanika Malkani: Haaa
+19/02/17, 18:13 - Kanika Malkani: Bye
+19/02/17, 18:14 - Pranay Saksena: Bye
+20/02/17, 17:28 - Pranay Saksena: When are you'll going??
+20/02/17, 19:52 - Kanika Malkani: We are here for a lot of time
+20/02/17, 19:52 - Kanika Malkani: If you wanna come you can
+20/02/17, 19:52 - Kanika Malkani: People miss your Pinga
+20/02/17, 19:53 - Pranay Saksena: I can't come, dads bday
+20/02/17, 19:53 - Pranay Saksena: And even if I did come I'm definitely not doing Pinga
+20/02/17, 19:53 - Pranay Saksena: !!!!
+20/02/17, 19:54 - Pranay Saksena: 🐷
+20/02/17, 23:11 - Kanika Malkani: Okayy
+20/02/17, 23:12 - Kanika Malkani: Wish you dad a happy Birthday from my side!
+20/02/17, 23:12 - Kanika Malkani: Also go check my story on snapchat
+20/02/17, 23:32 - Pranay Saksena: Thanks!
+03/04/17, 17:58 - Kanika Malkani: <Media omitted>
+03/04/17, 17:58 - Kanika Malkani: The second one
+03/04/17, 18:41 - Pranay Saksena: C.
+03/04/17, 18:42 - Pranay Saksena: Ice-cream update - Amul has won a lawsuit against Walls, Kwality and some other branded icecream makers. They can no longer sell their products as icecream. Hence the new marketing name is 'frozen desserts'. If you check labels of items sold as frozen desserts it does say hydrogenated vegetable oil which is dalda! So if its frozen dessert, its definately dalda. You can check the packs. This is ice cream season. All our children love to eat it, so be aware that AMUL is the only ice cream manufacturer who makes icecream from milk not from vegetable fats..
+Just read the link
+http://m.economictimes.com/industry/services/advertising/hindustan-unilever-told-to-erase-ice-cream-word-from-kwality-walls-advertisements/articleshow/15322048.cms?intenttarget=no
+03/04/17, 19:48 - Kanika Malkani: Its wrong actually. Just found it.
+03/04/17, 19:54 - Kanika Malkani: Thanks anyways
+03/04/17, 20:15 - Pranay Saksena: DO NOT UNDER ANY CASE TELL ME THE RIGHT ANSWER.
+03/04/17, 20:16 - Pranay Saksena: Thanks for not telling me.
+03/04/17, 23:04 - Kanika Malkani: The answer is:-..........................
+03/04/17, 23:04 - Kanika Malkani: (To be continued)
+03/04/17, 23:25 - Pranay Saksena: I'm really lost in the widest extents of sheer suspense.
+04/04/17, 12:11 - Kanika Malkani: 😒😒😒
+04/04/17, 12:26 - Pranay Saksena: I should be doing that.
+09/04/17, 18:22 - Pranay Saksena: Still no answer.
+09/04/17, 18:23 - Pranay Saksena: The inventor of biology just woke up from his grave.
+09/04/17, 19:13 - Kanika Malkani: Really?
+09/04/17, 19:14 - Kanika Malkani: The answer is right in front of you.
+09/04/17, 19:14 - Kanika Malkani: Still you don't know
+09/04/17, 19:14 - Kanika Malkani: 😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂
+09/04/17, 19:17 - Pranay Saksena: I'm not the policeman in Kaabil (I'm waiting till you get this joke)
+12/04/17, 19:24 - Kanika Malkani: Hello
+12/04/17, 19:26 - Pranay Saksena: Hello :)
+12/04/17, 19:27 - Kanika Malkani: Bored as always😕
+12/04/17, 19:27 - Pranay Saksena: Try writing something, maybe
+12/04/17, 19:28 - Pranay Saksena: I mean write a diary or some poems or stories, about whatever you feel like
+12/04/17, 19:28 - Kanika Malkani: I'm Reading a book.
+12/04/17, 19:28 - Pranay Saksena: I've been writing stories and poems the whole day
+12/04/17, 19:29 - Kanika Malkani: AWESOME!👍🏻
+12/04/17, 19:29 - Pranay Saksena: Which book?
+12/04/17, 19:30 - Kanika Malkani: Adventures in funeral crashing
+12/04/17, 19:30 - Kanika Malkani: It's on the kindle actually
+12/04/17, 19:31 - Pranay Saksena: Oh
+12/04/17, 19:31 - Pranay Saksena: Great!
+12/04/17, 19:31 - Pranay Saksena: How's it?
+12/04/17, 19:32 - Kanika Malkani: Amazing. Love it and it's the third in the 6 book series
+12/04/17, 19:32 - Pranay Saksena: Genre (didn't get it from the title) 😂
+12/04/17, 19:33 - Pranay Saksena: ???
+12/04/17, 19:34 - Kanika Malkani: Adventure+murder+romance
+12/04/17, 19:34 - Pranay Saksena: Murder?? 🔪
+12/04/17, 19:34 - Kanika Malkani: Planning yours too
+12/04/17, 19:36 - Pranay Saksena: So that's how you pass your time (by murdering people)
+12/04/17, 19:45 - Kanika Malkani: Yaa i guess
+12/04/17, 19:45 - Kanika Malkani: Specially yours
+12/04/17, 19:46 - Kanika Malkani: Going for the talent show tomorrow?
+12/04/17, 19:46 - Pranay Saksena: Ya
+12/04/17, 19:46 - Pranay Saksena: It's just the auditions
+12/04/17, 19:46 - Pranay Saksena: Are you?
+12/04/17, 19:47 - Pranay Saksena: Do you have any phone  numbers of the people incharge of the event
+12/04/17, 19:47 - Pranay Saksena: ???
+12/04/17, 21:01 - Kanika Malkani: I may come tomorrow.
+12/04/17, 21:01 - Kanika Malkani: I have no idea.
+12/04/17, 21:01 - Kanika Malkani: For the numbers
+16/04/17, 21:18 - Kanika Malkani: 👍🏻
+16/04/17, 21:30 - Pranay Saksena: Thanks
+22/04/17, 11:12 - Kanika Malkani: Hi
+22/04/17, 11:12 - Kanika Malkani: How were your papers?
+22/04/17, 11:16 - Pranay Saksena: Bad
+22/04/17, 11:16 - Kanika Malkani: Topped?
+22/04/17, 11:17 - Kanika Malkani: Definitely topped all subjects.
+22/04/17, 11:17 - Kanika Malkani: How much did you get in chemistry?
+22/04/17, 11:18 - Kanika Malkani: Hello?
+22/04/17, 11:19 - Pranay Saksena: 14p
+22/04/17, 11:19 - Pranay Saksena: 140
+22/04/17, 11:20 - Kanika Malkani: Gr8
+22/04/17, 11:20 - Kanika Malkani: What about ICT?
+22/04/17, 11:22 - Pranay Saksena: 238
+22/04/17, 11:23 - Kanika Malkani: Amazing
+22/04/17, 11:23 - Kanika Malkani: Okay gtg
+22/04/17, 11:23 - Kanika Malkani: Bye
+22/04/17, 11:23 - Pranay Saksena: Bye
+26/04/17, 09:05 - Kanika Malkani: Hello there!
+26/04/17, 09:05 - Kanika Malkani: I promise that you'll be the first person to know why katappa killed Bahubali!🤣🤣🤣🤣🤣🤣🤣🤣🤣
+26/04/17, 09:06 - Kanika Malkani: Jai maa maheshmati
+26/04/17, 10:47 - Pranay Saksena: <Media omitted>
+26/04/17, 10:49 - Pranay Saksena: <Media omitted>
+26/04/17, 10:53 - Kanika Malkani: Wth?!😂😂😂
+26/04/17, 10:54 - Kanika Malkani: Mrityu really😂😂
+26/04/17, 10:54 - Kanika Malkani: And what was the last audio for?
+26/04/17, 10:55 - Kanika Malkani: Darr ke aage Jeet hai😂😂😂
+26/04/17, 10:55 - Kanika Malkani: Mrityu se Darr nahi lagta
+26/04/17, 10:55 - Pranay Saksena: Just to show how bad my throat is......
+26/04/17, 10:55 - Pranay Saksena: I know let's call jeet.........sir
+26/04/17, 10:56 - Kanika Malkani: 😂
+26/04/17, 10:56 - Kanika Malkani: Your really bad at jokes🙂
+26/04/17, 10:57 - Pranay Saksena: When have I been good 😢
+26/04/17, 10:58 - Kanika Malkani: Don't take it to your heart.......
+26/04/17, 10:58 - Kanika Malkani: This one was really bad
+26/04/17, 10:59 - Kanika Malkani: Whatever
+26/04/17, 10:59 - Pranay Saksena: You think I did 🤣
+26/04/17, 10:59 - Kanika Malkani: What are you doing this summer vacation?
+26/04/17, 10:59 - Kanika Malkani: Except studying😒
+26/04/17, 11:00 - Pranay Saksena: Figuring out what to do after 10th cause Ive no idea
+26/04/17, 11:00 - Kanika Malkani: Gr8
+26/04/17, 11:00 - Pranay Saksena: What about you
+26/04/17, 11:00 - Pranay Saksena: ???
+26/04/17, 11:00 - Kanika Malkani: Studying
+26/04/17, 11:01 - Pranay Saksena: This
+26/04/17, 11:01 - Kanika Malkani: Yeah
+26/04/17, 11:01 - Kanika Malkani: And following some of my hobbies
+26/04/17, 11:01 - Pranay Saksena: What exactly?
+26/04/17, 11:02 - Kanika Malkani: Dance
+26/04/17, 11:02 - Kanika Malkani: Chess
+26/04/17, 11:02 - Kanika Malkani: Craft
+26/04/17, 11:02 - Pranay Saksena: Woah
+26/04/17, 11:02 - Pranay Saksena: Good
+26/04/17, 11:02 - Kanika Malkani: Everybody's got there talent
+26/04/17, 11:03 - Pranay Saksena: Yeah
+26/04/17, 11:03 - Pranay Saksena: Why didnt you come for the USGS GOT TALENT auditions?
+26/04/17, 11:03 - Pranay Saksena: Vidhita did come
+26/04/17, 11:03 - Kanika Malkani: Ik
+26/04/17, 11:04 - Kanika Malkani: Had some other place to go to
+26/04/17, 11:04 - Pranay Saksena: Okay...
+26/04/17, 11:04 - Kanika Malkani: What else?
+26/04/17, 11:04 - Pranay Saksena: Why didnt kiara come?
+26/04/17, 11:04 - Kanika Malkani: Cause she didn't want to
+26/04/17, 11:05 - Kanika Malkani: Plus she was leaving
+26/04/17, 11:05 - Kanika Malkani: So she had pack and meet everyone
+26/04/17, 11:05 - Pranay Saksena: Okay....
+26/04/17, 11:06 - Pranay Saksena: I'll be practising music, reading books, watching shows
+26/04/17, 11:06 - Kanika Malkani: Which shows?
+26/04/17, 11:06 - Kanika Malkani: Which books?
+26/04/17, 11:06 - Kanika Malkani: Decided yet?
+26/04/17, 11:06 - Pranay Saksena: Books are all psychology
+26/04/17, 11:06 - Pranay Saksena: Big Fat Ones
+26/04/17, 11:07 - Kanika Malkani: Gr8
+26/04/17, 11:07 - Pranay Saksena: Friends arrow flash castle etc
+26/04/17, 11:08 - Kanika Malkani: Any on Netflix?
+26/04/17, 11:08 - Pranay Saksena: I'll check out Netflix too but  I have those downloaded
+26/04/17, 11:09 - Kanika Malkani: Good
+26/04/17, 11:09 - Pranay Saksena: What else for you
+26/04/17, 11:09 - Kanika Malkani: Nothing much
+26/04/17, 11:09 - Kanika Malkani: Am out now
+26/04/17, 11:10 - Pranay Saksena: Okay
+26/04/17, 11:10 - Kanika Malkani: Tamil nadu
+26/04/17, 11:10 - Pranay Saksena: Woah
+26/04/17, 11:10 - Pranay Saksena: I thought out means just out
+26/04/17, 11:11 - Kanika Malkani: I have been here since the past 8 days
+26/04/17, 11:11 - Kanika Malkani: If you noticed I didn't come to collect my papers too
+26/04/17, 11:11 - Pranay Saksena: Ya
+26/04/17, 11:13 - Kanika Malkani: A monkey just got in our room😂
+26/04/17, 11:13 - Kanika Malkani: <Media omitted>
+26/04/17, 11:14 - Pranay Saksena: 😂😂😂😂
+26/04/17, 11:14 - Pranay Saksena: So cute!
+26/04/17, 11:15 - Kanika Malkani: It came to steal the lays
+26/04/17, 11:15 - Pranay Saksena: So it's just like you then
+26/04/17, 11:15 - Kanika Malkani: 😑😑😑
+26/04/17, 11:17 - Pranay Saksena: Come on! You steal air!
+26/04/17, 11:17 - Kanika Malkani: Yaya
+26/04/17, 11:18 - Kanika Malkani: Let's play this really quick game called choose
+26/04/17, 11:18 - Kanika Malkani: It's basically very dum.
+26/04/17, 11:19 - Pranay Saksena: I expect tha
+26/04/17, 11:19 - Pranay Saksena: T
+26/04/17, 11:19 - Kanika Malkani: I give you two options and you choose
+26/04/17, 11:19 - Pranay Saksena: Okay
+26/04/17, 11:19 - Kanika Malkani: Ready?
+26/04/17, 11:19 - Pranay Saksena: I'll get back
+26/04/17, 11:20 - Kanika Malkani: Okay
+26/04/17, 11:20 - Pranay Saksena: Yeah go on
+26/04/17, 11:21 - Kanika Malkani: Lays or kurkure
+26/04/17, 11:21 - Pranay Saksena: Kurkure
+26/04/17, 11:21 - Kanika Malkani: Male or female
+26/04/17, 11:21 - Pranay Saksena: But i don't eat them
+26/04/17, 11:21 - Pranay Saksena: Both
+26/04/17, 11:21 - Pranay Saksena: 😂
+26/04/17, 11:21 - Kanika Malkani: Monkey or Orangutan
+26/04/17, 11:21 - Kanika Malkani: 😂
+26/04/17, 11:22 - Pranay Saksena: Orangutan
+26/04/17, 11:22 - Kanika Malkani: iPod or ipad
+26/04/17, 11:22 - Pranay Saksena: Ipad
+26/04/17, 11:22 - Kanika Malkani: 😂or 🤣
+26/04/17, 11:22 - Pranay Saksena: 🤣
+26/04/17, 11:22 - Kanika Malkani: CRT or Ips?
+26/04/17, 11:22 - Pranay Saksena: Ips
+26/04/17, 11:22 - Kanika Malkani: Android or iOS
+26/04/17, 11:23 - Pranay Saksena: Are you kidding me
+26/04/17, 11:23 - Pranay Saksena: Android
+26/04/17, 11:23 - Kanika Malkani: Sujata miss or Shilpa miss
+26/04/17, 11:23 - Pranay Saksena: Sujataiss
+26/04/17, 11:23 - Pranay Saksena: Miss
+26/04/17, 11:23 - Kanika Malkani: Netflix or YouTube?
+26/04/17, 11:23 - Pranay Saksena: You tube
+26/04/17, 11:23 - Kanika Malkani: Mom or dad
+26/04/17, 11:23 - Pranay Saksena: Both😂
+26/04/17, 11:23 - Kanika Malkani: Vines or pranks?
+26/04/17, 11:23 - Kanika Malkani: Ayee
+26/04/17, 11:23 - Pranay Saksena: What kind of a question is that 😂
+26/04/17, 11:24 - Pranay Saksena: Both
+26/04/17, 11:24 - Kanika Malkani: TV or computer?
+26/04/17, 11:24 - Pranay Saksena: Computer
+26/04/17, 11:24 - Kanika Malkani: Bed or sofa?
+26/04/17, 11:24 - Pranay Saksena: Sofa
+26/04/17, 11:24 - Pranay Saksena: To sleep
+26/04/17, 11:24 - Kanika Malkani: Khushi b or Khushi dungrani?
+26/04/17, 11:24 - Kanika Malkani: Ya
+26/04/17, 11:25 - Kanika Malkani: Dev or Mohit?
+26/04/17, 11:25 - Pranay Saksena: Why?
+26/04/17, 11:25 - Kanika Malkani: What?
+26/04/17, 11:25 - Kanika Malkani: Just choose!
+26/04/17, 11:25 - Kanika Malkani: 8th grade or 9th grade
+26/04/17, 11:25 - Pranay Saksena: You'll just get me into trouble
+26/04/17, 11:26 - Pranay Saksena: 8th
+26/04/17, 11:26 - Kanika Malkani: Okay then don't
+26/04/17, 11:26 - Kanika Malkani: Insta or Snapchat?
+26/04/17, 11:26 - Pranay Saksena: INsta
+26/04/17, 11:26 - Kanika Malkani: ICT or chem?
+26/04/17, 11:26 - Kanika Malkani: English or bio?
+26/04/17, 11:26 - Kanika Malkani: Maths or physics?
+26/04/17, 11:26 - Pranay Saksena: ICT  (are you kidding me)
+26/04/17, 11:27 - Pranay Saksena: Eng
+26/04/17, 11:27 - Pranay Saksena: Maths
+26/04/17, 11:27 - Kanika Malkani: End of quiz
+26/04/17, 11:27 - Kanika Malkani: Sorry but you lost😂
+26/04/17, 11:27 - Kanika Malkani: Kidding
+26/04/17, 11:27 - Pranay Saksena: Yeah right 😂
+26/04/17, 11:28 - Pranay Saksena: Why were you asking me to compare people??😂
+26/04/17, 11:28 - Kanika Malkani: Just
+26/04/17, 11:28 - Pranay Saksena: You can ask me that in person
+26/04/17, 11:28 - Kanika Malkani: Tp
+26/04/17, 11:28 - Pranay Saksena: I don't wanna provide proofs on whatsapp
+26/04/17, 11:28 - Pranay Saksena: 😂😂🤣😂🤣
+26/04/17, 11:29 - Kanika Malkani: Haa baba
+26/04/17, 11:29 - Pranay Saksena: By the way it would definitely be dev cause he and i have been friends since long and I don't really know mohit very much
+26/04/17, 11:30 - Kanika Malkani: Ahaa
+26/04/17, 11:30 - Kanika Malkani: You told me
+26/04/17, 11:30 - Kanika Malkani: Or he did
+26/04/17, 11:30 - Pranay Saksena: ????
+26/04/17, 11:31 - Pranay Saksena: 'He'?
+26/04/17, 11:31 - Kanika Malkani: That you'll were friends long ago
+26/04/17, 11:31 - Kanika Malkani: He-dev
+26/04/17, 11:31 - Pranay Saksena: And?
+26/04/17, 11:31 - Kanika Malkani: Nothing
+26/04/17, 11:31 - Kanika Malkani: So I guess I knew your answer
+26/04/17, 11:32 - Pranay Saksena: We were known as the dodos of the class in 3rd grade 😂
+26/04/17, 11:32 - Kanika Malkani: 😂
+26/04/17, 11:32 - Kanika Malkani: Why?
+26/04/17, 11:32 - Pranay Saksena: Name given by ratna thakur miss
+26/04/17, 11:33 - Kanika Malkani: Ohh
+26/04/17, 11:33 - Pranay Saksena: Because of the stupidity we used to do together 😂
+26/04/17, 11:34 - Pranay Saksena: What about you
+26/04/17, 11:35 - Kanika Malkani: Everybody was thoda paagaal in that grade
+26/04/17, 11:35 - Pranay Saksena: Well, I dont know about 'thoda'
+26/04/17, 11:35 - Kanika Malkani: I was in paarul miss ka class in 3rd
+26/04/17, 11:36 - Kanika Malkani: And we loved her that time pe
+26/04/17, 11:36 - Pranay Saksena: I'll get back
+26/04/17, 11:36 - Kanika Malkani: Okay
+26/04/17, 11:37 - Pranay Saksena: You dont love her now?
+26/04/17, 11:38 - Kanika Malkani: No I don't
+26/04/17, 11:38 - Kanika Malkani: Who does?
+26/04/17, 11:39 - Pranay Saksena: Why what's wrong?
+26/04/17, 11:40 - Kanika Malkani: She doesn't teach that well
+26/04/17, 11:40 - Kanika Malkani: And has become too annoying
+26/04/17, 11:41 - Kanika Malkani: No body likes the way she teaches
+26/04/17, 11:41 - Pranay Saksena: I agree
+26/04/17, 11:41 - Kanika Malkani: Most of them really
+26/04/17, 11:41 - Pranay Saksena: Yeah i dont too kind of
+26/04/17, 11:41 - Kanika Malkani: The foyer isn't doing that well in chem
+26/04/17, 11:41 - Pranay Saksena: Yeah
+26/04/17, 11:42 - Kanika Malkani: And people excluding scholars like you who don't take tuitions are just failing that subject
+26/04/17, 11:42 - Pranay Saksena: Ya I know
+26/04/17, 11:43 - Pranay Saksena: It's not going so well
+26/04/17, 11:43 - Pranay Saksena: Any bachpan ka dost?
+03/05/21, 00:31 - Kanika Malkani: and i could see your whole code?
+03/05/21, 00:43 - Pranay Saksena: The boss shows up in real life bro 😂
+03/05/21, 00:44 - Pranay Saksena: Oh god 😂😂😂😂
+03/05/21, 00:44 - Pranay Saksena: So if YOU are playing this is the workplace and YOUR boss shows up, then to hide it you could just press b, get it now?
+03/05/21, 00:44 - Pranay Saksena: Yup that was intentional, the instructions are at the top
+03/05/21, 00:46 - Kanika Malkani: oh
+03/05/21, 00:46 - Kanika Malkani: i get it😂😂😂😂😂😂😂😂😂😂😂😂😂😂
+03/05/21, 00:46 - Kanika Malkani: yes yes
+03/05/21, 00:46 - Kanika Malkani: I'm such a clown ok😂
+03/05/21, 00:46 - Kanika Malkani: okii
+03/05/21, 00:48 - Pranay Saksena: Damn didnt think the boss part wasn't obvious 😂😂
+03/05/21, 00:48 - Pranay Saksena: Wow what a realisation huh 😂
+03/05/21, 00:50 - Kanika Malkani: now u do😂😂😂
+03/05/21, 00:50 - Kanika Malkani: pranay man😔
+03/05/21, 00:51 - Pranay Saksena: 😂
+17/07/21, 00:14 - Kanika Malkani: hellu, happy birthday pranay,  we should catch up soon, I saw your call a little too late, have fun on your bday and tell me all about it eheh🥳❤️
+17/07/21, 01:40 - Kanika Malkani: https://drive.google.com/file/d/1NP9KONY4J3zSAMwZsSGrEvktdrrTecPf/view?usp=sharing
+23/08/21, 12:56 - Pranay Saksena: <Media omitted>
+23/08/21, 16:13 - Kanika Malkani: istg i don't know why u aren't posting, literally all I see on Instagram is singers blowing up because of their talent
+23/08/21, 16:13 - Kanika Malkani: this is so so so good!!!
+23/08/21, 16:13 - Kanika Malkani: okay but also, like what are your thoughts on posting your covers on Instagram?
+23/08/21, 17:14 - Pranay Saksena: So it's not like I have thoughts against it, i know I want to
+23/08/21, 17:14 - Pranay Saksena: I'll have to learn playing the guitar well enough to start creating covers which sound insta-good
+23/08/21, 17:16 - Pranay Saksena: Also, once I start it's a task for me to be consistent and not let it go when studies get tougher
+23/08/21, 17:17 - Pranay Saksena: Thanks yaar!
+23/08/21, 17:56 - Kanika Malkani: oh okay that's goood
+23/08/21, 17:56 - Kanika Malkani: u played the guitar for 2 secs and I just went like, when did this happen
+23/08/21, 17:57 - Kanika Malkani: oh yes, this
+23/08/21, 17:57 - Kanika Malkani: best is to mass create content, and like post weekly, but that never really happens
+23/08/21, 21:21 - Pranay Saksena: <Media omitted>
+23/08/21, 21:23 - Pranay Saksena: Throat's a bit scratchy, but music must go on ✌️
+23/08/21, 21:24 - Pranay Saksena: 😂 I got it for my b'day, tabse I've been doing thoda tung tung 😂😂😂
+23/08/21, 21:26 - Pranay Saksena: <Media omitted>
+23/08/21, 23:13 - Kanika Malkani: the end>>>>>>>>
+23/08/21, 23:13 - Kanika Malkani: ehhe yess
+23/08/21, 23:13 - Kanika Malkani: 😂😂😂😂ohh
+23/08/21, 23:13 - Kanika Malkani: like a proper guitar?
+23/08/21, 23:13 - Pranay Saksena: Thenks thenks
+23/08/21, 23:14 - Kanika Malkani: yea once a week sounds way too less
+23/08/21, 23:14 - Kanika Malkani: but you obviously have to record yourself w video haan😂
+23/08/21, 23:14 - Pranay Saksena: <Media omitted>
+23/08/21, 23:14 - Kanika Malkani: that is so so coool
+23/08/21, 23:15 - Pranay Saksena: Im not bragging at all, but I'm not gonna deny it, it is much much grander than i thot
+23/08/21, 23:15 - Pranay Saksena: It is really really cool
+23/08/21, 23:16 - Pranay Saksena: Which is another problem, because I tend to get camera conscious and end up messing up somewhere 😂
+23/08/21, 23:24 - Kanika Malkani: ain't a brag
+23/08/21, 23:24 - Kanika Malkani: it is
+23/08/21, 23:24 - Kanika Malkani: did you always want one?
+23/08/21, 23:25 - Kanika Malkani: oh yea, camera presence also important
+23/08/21, 23:25 - Pranay Saksena: Yesssss
+23/08/21, 23:25 - Kanika Malkani: also your display 😂😂😂😂😂😂😂
+23/08/21, 23:25 - Kanika Malkani: please tell me you changed your virtual background after this
+23/08/21, 23:25 - Pranay Saksena: 😂😂😂😂😂
+23/08/21, 23:26 - Pranay Saksena: No no 😂😂😂
+16/09/21, 11:18 - Pranay Saksena: <Media omitted>
+16/09/21, 12:40 - Kanika Malkani: bruh
+16/09/21, 12:41 - Kanika Malkani: istg everytime u send a vn
+16/09/21, 12:41 - Kanika Malkani: I'm just mad that it's not out there
+16/09/21, 12:42 - Kanika Malkani: THIS LITERALLY SOUNDS LIKE ITS THE ORIGINAL VERSION
+16/09/21, 12:42 - Kanika Malkani: not even kidding
+16/09/21, 18:28 - Pranay Saksena: Oh dang
+16/09/21, 18:29 - Pranay Saksena: It will be, I'm making myself ready for it
+16/09/21, 18:29 - Pranay Saksena: 😭💓💓
+19/09/21, 12:42 - Pranay Saksena: <Media omitted>
+19/09/21, 12:42 - Pranay Saksena: This is a lil older one, but I thought I'd share it, especially because I've tried a very different style here ✌️
+19/09/21, 18:44 - Kanika Malkani: oooo talaash
+19/09/21, 18:44 - Kanika Malkani: the way u subtly said muskaane jhooti hai>>>>>>
+19/09/21, 18:44 - Kanika Malkani: I haven't ever heard the male version of this song tho heh
+19/09/21, 18:47 - Pranay Saksena: That's because it didn't exist.... but now it does 😋✌️
+19/09/21, 18:47 - Pranay Saksena: Ouuhh yeah
+19/09/21, 18:49 - Kanika Malkani: yea thought so😂
+19/09/21, 18:49 - Kanika Malkani: damnnn
+11/10/21, 17:47 - Pranay Saksena: <Media omitted>
+11/10/21, 17:51 - Kanika Malkani: pranay🤩🤩🤩🤩
+11/10/21, 17:51 - Kanika Malkani: that was so beautiful
+11/10/21, 17:51 - Kanika Malkani: what's up w that stache tho😂
+13/10/21, 12:46 - Pranay Saksena: Thenks!
+13/10/21, 12:46 - Pranay Saksena: Aye I like it 😂
+13/10/21, 20:34 - Kanika Malkani: 30 year old pranay would definitely approve
+14/10/21, 13:37 - Pranay Saksena: Aye 😂
+04/11/21, 13:32 - Pranay Saksena: Happy Diwali! 🪔✨
+04/11/21, 15:05 - Kanika Malkani: happy diwalii🥰✨
+04/11/21, 15:05 - Kanika Malkani: what plans for today?
+04/11/21, 15:46 - Pranay Saksena: Nothing much bro, family manoranjan and shagun ke taufe
+04/11/21, 15:46 - Pranay Saksena: What about you?
+04/11/21, 17:22 - Kanika Malkani: oooo have funn
+04/11/21, 17:22 - Kanika Malkani: Same2same
+01/01/22, 15:52 - Pranay Saksena: Happy New Year Kanika! 🎊
+01/01/22, 18:20 - Kanika Malkani: hello
+01/01/22, 18:20 - Kanika Malkani: happy new year 🥳🫂🥰
+11/01/22, 23:05 - Kanika Malkani: https://us04web.zoom.us/j/75082205779?pwd=TEWPhsAYwc3sMqhlY9LTzusdooQq8M.1
+11/01/22, 23:09 - Pranay Saksena: Umm...?
+11/01/22, 23:10 - Kanika Malkani: hello we were bored so we're on a zoom call
+11/01/22, 23:11 - Pranay Saksena: Okay yeah
+11/01/22, 23:11 - Pranay Saksena: Who all are there?
+11/01/22, 23:12 - Kanika Malkani: ends in 8 mins ayo join
+11/01/22, 23:14 - Pranay Saksena: Lol okay
+11/01/22, 23:20 - Pranay Saksena: lol
+09/03/22, 21:25 - Pranay Saksena: https://youtu.be/JTLWtE_nzCw
+
+She's the girl who nailed the set three years ago
+09/03/22, 21:26 - Pranay Saksena: I had gone for an open mic, and she was competing with me
+09/03/22, 21:41 - Kanika Malkani: hi, did you reach homee
+09/03/22, 21:42 - Kanika Malkani: WHEN DID U HELLO HOW WAS IT
+09/03/22, 21:42 - Kanika Malkani: so much u forgot to tell
+09/03/22, 21:42 - Kanika Malkani: shall watch super soon
+09/03/22, 21:42 - Pranay Saksena: Yes
+09/03/22, 21:42 - Pranay Saksena: Did you?
+09/03/22, 21:43 - Pranay Saksena: Three years ago
+09/03/22, 21:43 - Pranay Saksena: Yes 😁
+09/03/22, 21:43 - Kanika Malkani: yes yes
+09/03/22, 21:43 - Kanika Malkani: omg how was it thoo
+09/03/22, 21:43 - Kanika Malkani: why didn't we get invited
+09/03/22, 21:43 - Pranay Saksena: You didn't fall down the stairs tho?
+09/03/22, 21:43 - Kanika Malkani: <Media omitted>
+09/03/22, 21:43 - Kanika Malkani: wdym 😂
+09/03/22, 21:44 - Pranay Saksena: Nothing I'm just kidding 😂
+09/03/22, 21:44 - Pranay Saksena: It was super last moment isliye
+09/03/22, 21:45 - Pranay Saksena: <Media omitted>
+09/03/22, 21:45 - Kanika Malkani: bold of u to assume I took the stairs in the first place 😂
+09/03/22, 21:45 - Kanika Malkani: never mentioned thooo
+09/03/22, 21:45 - Kanika Malkani: sus
+09/03/22, 21:46 - Kanika Malkani: <Media omitted>
+09/03/22, 21:46 - Pranay Saksena: Hello you're also holding so many state secrets
+09/03/22, 21:47 - Kanika Malkani: very tru
+09/03/22, 21:47 - Pranay Saksena: We literally walked to your house, so thats the only place something could have happened to you kiddo
+09/03/22, 21:47 - Pranay Saksena: Otherwise ofc you reached home 😂
+09/03/22, 21:48 - Pranay Saksena: <Media omitted>
+09/03/22, 21:48 - Kanika Malkani: 😂😂😂😂😂exactly
+09/03/22, 21:48 - Kanika Malkani: <Media omitted>
+09/03/22, 21:48 - Kanika Malkani: but yes
+09/03/22, 21:48 - Kanika Malkani: was fun meeting you after so long
+09/03/22, 21:49 - Pranay Saksena: It was
+09/03/22, 21:49 - Pranay Saksena: Chalo gotta go, ttyl?
+09/03/22, 21:51 - Kanika Malkani: suree
+09/03/22, 21:51 - Pranay Saksena: Byeee
+09/03/22, 23:17 - Kanika Malkani: <Media omitted>
+09/03/22, 23:19 - Kanika Malkani: <Media omitted>
+10/03/22, 14:14 - Pranay Saksena: Hehee
+10/03/22, 14:14 - Pranay Saksena: Noice
+18/03/22, 12:42 - Pranay Saksena: Happy Holi!
+19/03/22, 10:46 - Kanika Malkani: hello happy late holii
+19/03/22, 10:46 - Kanika Malkani: did u celebrate
+19/03/22, 13:27 - Pranay Saksena: With family and building friends yes, smol celebration
+19/03/22, 13:28 - Pranay Saksena: Did you?
+19/03/22, 20:19 - Kanika Malkani: ooo funn
+19/03/22, 20:19 - Kanika Malkani: where the photos at
+19/03/22, 20:19 - Kanika Malkani: no🥲
+19/03/22, 20:27 - Pranay Saksena: Actually we didn't click any
+19/03/22, 20:27 - Pranay Saksena: The playing with colours part was smol, after that we mainly played cards for the rest of the time
+19/03/22, 20:28 - Pranay Saksena: Sed
+19/03/22, 20:29 - Pranay Saksena: Ah that's okay, I almost didn't have a plan too
+19/03/22, 20:29 - Pranay Saksena: Btw your profile pic looks great gurllll
+20/03/22, 10:25 - Kanika Malkani: woohooo
+20/03/22, 10:25 - Kanika Malkani: but I had 2😂😂
+20/03/22, 10:25 - Kanika Malkani: thankuuu
+20/03/22, 14:21 - Pranay Saksena: Damn what were they
+20/03/22, 21:11 - Kanika Malkani: playing holi at silly and playing holi at a friend's building
+21/03/22, 09:55 - Pranay Saksena: Noice. What's silly
+21/03/22, 11:30 - Kanika Malkani: it's a restaurant in khar
+21/03/22, 21:40 - Pranay Saksena: Oho
+21/03/22, 21:42 - Pranay Saksena: <Media omitted>
+21/03/22, 23:30 - Kanika Malkani: u haven't heard of it?????
+21/03/22, 23:30 - Kanika Malkani: ouchh
+22/03/22, 19:22 - Pranay Saksena: No no
+27/03/22, 19:07 - Pranay Saksena: Hey Kanika
+27/03/22, 19:07 - Pranay Saksena: I'm planning to go for swimming sometime this week, you wanna join in?
+28/03/22, 02:42 - Kanika Malkani: hellloo
+28/03/22, 02:43 - Kanika Malkani: I shall let you know if I can cuz guess who has midterms this week
+28/03/22, 02:43 - Kanika Malkani: but where do you go swimming??
+28/03/22, 12:12 - Pranay Saksena: Ouh demn
+28/03/22, 12:12 - Pranay Saksena: Celebrations club
+28/03/22, 18:37 - Kanika Malkani: oooo
+06/04/22, 00:53 - Pranay Saksena: The irony...
+
+https://www.psypost.org/2022/04/reading-on-a-smartphone-promotes-overactivity-in-the-prefrontal-cortex-and-lowers-reading-comprehension-study-finds-62848
+06/04/22, 17:10 - Kanika Malkani: but do we have a choice tho🥲🥲🥲🥲🥲
+06/04/22, 20:20 - Pranay Saksena: Nope 🥲🙃
+06/04/22, 20:20 - Pranay Saksena: Btw
+06/04/22, 20:21 - Pranay Saksena: I got a locket
+06/04/22, 20:21 - Pranay Saksena: <Media omitted>
+06/04/22, 20:22 - Pranay Saksena: Wait that's not a locket
+06/04/22, 20:22 - Pranay Saksena: Idk what's it called lol
+07/04/22, 00:19 - Kanika Malkani: I was just gonna say that
+07/04/22, 00:19 - Kanika Malkani: is it of some astrological significance??
+07/04/22, 00:19 - Kanika Malkani: stone🤝🏻
+07/04/22, 00:20 - Pranay Saksena: Yes apparently my parents spoke to this pandit they know and had it made for me
+07/04/22, 00:20 - Pranay Saksena: I literally just found out the very moment it was given to me
+07/04/22, 00:22 - Pranay Saksena: Yes that's much simpler 😂 🤝
+07/04/22, 01:49 - Kanika Malkani: what are all these cool privileges that I have no access to😩
+07/04/22, 01:49 - Kanika Malkani: oooooo
+07/04/22, 11:50 - Pranay Saksena: These might be privileges but they're not cool are they 😂
+07/04/22, 13:43 - Kanika Malkani: why nottt
+07/04/22, 13:57 - Pranay Saksena: Idk, they're room temperature then ig 😂
+08/04/22, 22:53 - Pranay Saksena: https://www.youtube.com/watch?v=4HdJyZCcD-Q
+22/04/22, 20:26 - Pranay Saksena: Kanika ma'am
+22/04/22, 20:26 - Pranay Saksena: I'm free this weekend
+22/04/22, 20:26 - Pranay Saksena: You wanna meet up?
+22/04/22, 22:43 - Kanika Malkani: helloooo
+22/04/22, 22:43 - Kanika Malkani: I have exams starting Monday 🥲😬
+22/04/22, 22:43 - Kanika Malkani: so shall meet after that
+22/04/22, 22:43 - Kanika Malkani: what's been up otherwise
+22/04/22, 22:49 - Pranay Saksena: Demnnn
+22/04/22, 22:49 - Pranay Saksena: Cool yeah
+22/04/22, 22:50 - Pranay Saksena: Some internship work, I have my own client and all now 😎
+22/04/22, 22:51 - Pranay Saksena: And plans are made for mulitverse of madness woohoo
+22/04/22, 23:03 - Kanika Malkani: wohooooooi
+22/04/22, 23:03 - Kanika Malkani: 😎😎😎😎😎pretty coooool
+22/04/22, 23:04 - Pranay Saksena: All the best for exems girl
+22/04/22, 23:07 - Kanika Malkani: thank youu
+23/04/22, 23:03 - Pranay Saksena: <Media omitted>
+23/04/22, 23:04 - Pranay Saksena: Recorded something after a long time 🙈
+23/04/22, 23:05 - Kanika Malkani: U DID NOT OMGGGGG
+23/04/22, 23:06 - Pranay Saksena: What?
+23/04/22, 23:07 - Kanika Malkani: literally listening to that song rnnn
+23/04/22, 23:07 - Kanika Malkani: mad obsessed with itt
+23/04/22, 23:07 - Pranay Saksena: SAME
+23/04/22, 23:07 - Kanika Malkani: best of coke studio ever
+23/04/22, 23:07 - Kanika Malkani: this is 😍😍😍😍😍😍😍😍😍😍
+23/04/22, 23:07 - Pranay Saksena: EXACTLYYYYY
+23/04/22, 23:08 - Kanika Malkani: wondering when you're ending up at coke studio😌
+23/04/22, 23:08 - Pranay Saksena: Omg thanks!
+23/04/22, 23:09 - Pranay Saksena: Hehe yaaaar 🙈
+11/05/22, 18:30 - Pranay Saksena: <Media omitted>
+11/05/22, 18:31 - Pranay Saksena: Damnnn
+11/05/22, 18:31 - Kanika Malkani: I miss this guy
+11/05/22, 18:31 - Kanika Malkani: these workshops >>>>>>>>
+11/05/22, 18:31 - Kanika Malkani: and the knowledge that it gave us is still there
+11/05/22, 18:31 - Pranay Saksena: Yes Aditya sir
+11/05/22, 18:32 - Pranay Saksena: Ikrrrr
+11/05/22, 18:32 - Kanika Malkani: damn u remember his name
+11/05/22, 18:32 - Pranay Saksena: I hope so
+11/05/22, 18:32 - Pranay Saksena: I did a film with him remember
+11/05/22, 18:37 - Kanika Malkani: I remember watching your film
+11/05/22, 18:37 - Kanika Malkani: but I didn't remember it was w him😃
+11/05/22, 18:37 - Pranay Saksena: Yeah he helped in direction
+11/05/22, 18:37 - Pranay Saksena: Damn that was so long ago
+11/05/22, 18:38 - Pranay Saksena: Sed
+11/05/22, 18:38 - Pranay Saksena: <Media omitted>
+11/05/22, 18:41 - Kanika Malkani: oooooi
+11/05/22, 18:41 - Kanika Malkani: <Media omitted>
+11/05/22, 18:41 - Kanika Malkani: take us back to school🥲
+11/05/22, 18:42 - Pranay Saksena: <Media omitted>
+11/05/22, 18:46 - Pranay Saksena: Hold on
+11/05/22, 18:46 - Pranay Saksena: Did you just react to this like insta
+11/05/22, 18:47 - Kanika Malkani: yes
+11/05/22, 18:47 - Pranay Saksena: Fuck I took five minutes to get that 😂😂
+11/05/22, 18:47 - Pranay Saksena: Wtf when did that happen
+11/05/22, 18:48 - Kanika Malkani: like a week ago
+11/05/22, 18:48 - Kanika Malkani: whatsapp tryna act cool🤝🏻
+11/05/22, 18:48 - Pranay Saksena: Hey i just reacted yaay
+11/05/22, 18:49 - Pranay Saksena: Lol
+11/05/22, 18:51 - Kanika Malkani: like my dad would yes
+11/05/22, 18:51 - Pranay Saksena: Regards beta
+11/05/22, 18:56 - Kanika Malkani: Ok
+11/05/22, 18:56 - Pranay Saksena: 😂
+04/06/22, 18:10 - Pranay Saksena: https://www.youtube.com/watch?v=tgJF-z-emy0
+04/06/22, 18:10 - Pranay Saksena: Dude this is so funny 😂
+04/06/22, 23:41 - Kanika Malkani: bro
+04/06/22, 23:41 - Kanika Malkani: I'll watch
+04/06/22, 23:41 - Kanika Malkani: but first
+04/06/22, 23:41 - Kanika Malkani: I just saw bhool bhulaiya
+04/06/22, 23:41 - Kanika Malkani: and it's more scary than funny
+04/06/22, 23:42 - Kanika Malkani: and it's more psychological than funny
+04/06/22, 23:42 - Kanika Malkani: and he wears that outfit once
+04/06/22, 23:42 - Kanika Malkani: and chota pandit doesn't even have like a decent amount of screentime
+04/06/22, 23:42 - Kanika Malkani: and it's more serious than funny
+04/06/22, 23:43 - Kanika Malkani: how is bhool bhulaiya 2 not funnier and way better
+05/06/22, 00:01 - Pranay Saksena: Yaay
+05/06/22, 00:01 - Pranay Saksena: Yes true
+05/06/22, 00:01 - Pranay Saksena: Hold on
+05/06/22, 00:42 - Pranay Saksena: Yes exactly
+05/06/22, 00:43 - Pranay Saksena: It teases the concept of a ghost as a misdirection and later explores the psychological side of it
+05/06/22, 00:43 - Pranay Saksena: Yeah, he just got trendy because of that paani waala scene
+05/06/22, 00:43 - Pranay Saksena: Wut
+05/06/22, 00:43 - Pranay Saksena: Bro Bhool Bhulaiya 2 is funnier agreed
+05/06/22, 00:44 - Pranay Saksena: But did you see the twist at the end? Bro IT DOESNT MAKE ANY SENSE. So many plot holes, so many aspects built up with no pay off, are you kidding me as a story how does BB2 work
+05/06/22, 00:45 - Pranay Saksena: BB1 was a full story tied together, agreed it might be a little less on the humour but bro there's so much more
+05/06/22, 00:46 - Pranay Saksena: Look at the cast the writing the suspense building
+05/06/22, 14:29 - Kanika Malkani: the thing is
+05/06/22, 14:29 - Kanika Malkani: imagine you've had a pathetic day
+05/06/22, 14:29 - Kanika Malkani: you're like
+05/06/22, 14:29 - Kanika Malkani: oh let's watch a funny movie
+05/06/22, 14:29 - Kanika Malkani: u watch bhool bhulaiya cuz u thought it was funny all these years
+05/06/22, 14:30 - Kanika Malkani: then yes your mind gets blown w all the psychological part
+05/06/22, 14:30 - Kanika Malkani: but at the end U GET A PSYCHOLOGICAL LESSON AND THATS ABOUT IT
+05/06/22, 14:30 - Kanika Malkani: AKSHAY KUMAR MISSING IN THE FIRST HALF AND CHOTA PANDIT IN SECOND
+05/06/22, 14:31 - Kanika Malkani: AND HOW DID Y'ALL AS 7 YEAR OLDS EVEN UNDERSTAND THE MOVIE AND FIND IT SO GOOD
+05/06/22, 14:31 - Kanika Malkani: shinchan dekha ya Einstein ka lecture
+05/06/22, 14:31 - Kanika Malkani: yes this all is amazing I get it
+05/06/22, 14:32 - Kanika Malkani: but pls tell me how everyone is hyping it up since bachpan are y'all fine
+05/06/22, 14:32 - Pranay Saksena: Yes in that case BB2 goes strong
+05/06/22, 14:32 - Pranay Saksena: That's true
+05/06/22, 14:33 - Kanika Malkani: and everytime u talk about bhool bhulaiya it's one gif that pops up in your head
+05/06/22, 14:33 - Kanika Malkani: <Media omitted>
+05/06/22, 14:33 - Pranay Saksena: 😂😂 we didn't get the DID part, but understood the basic emotion of the movie which was strong
+05/06/22, 14:34 - Kanika Malkani: but yes I get your point, amazing movie, I just feel like I was supposed to get laughs out of it and abhi I finished the movie toh dhokha ho gaya
+05/06/22, 14:34 - Kanika Malkani: childhood is a lie vibes
+05/06/22, 14:34 - Pranay Saksena: Ig we are, dude vidya Balans expressions 😍
+05/06/22, 14:34 - Kanika Malkani: anyways I'm done u may go ahead 👍🏻
+05/06/22, 14:35 - Pranay Saksena: Really think about it, there was so much depth in the movie bro, even as children we could get that
+05/06/22, 14:35 - Pranay Saksena: Yeah that i get it's more serious
+05/06/22, 14:35 - Pranay Saksena: 😂😂
+17/06/22, 21:46 - Kanika Malkani: <Media omitted>
+17/07/22, 12:12 - Kanika Malkani: BROOOO
+17/07/22, 12:12 - Kanika Malkani: happy birthday, have a great one🫡🥰🥳💓
+17/07/22, 12:12 - Kanika Malkani: what plans
+17/07/22, 15:36 - Pranay Saksena: Thank you ❤️
+17/07/22, 15:36 - Pranay Saksena: Zyada kuch nahi, family lunch, fir thoda friends and thoda work
+17/07/22, 15:59 - Kanika Malkani: achaa
+17/07/22, 15:59 - Kanika Malkani: send photos
+18/07/22, 10:42 - Pranay Saksena: We didn't take any 🥲
+18/07/22, 11:00 - Kanika Malkani: amazing 😃
+18/07/22, 11:00 - Kanika Malkani: one job you had
+18/07/22, 23:37 - Pranay Saksena: 🫠
+18/07/22, 23:44 - Kanika Malkani: 😃😃😃😃😃😃
+18/07/22, 23:44 - Kanika Malkani: I shall call u tomorrow
+01/01/23, 12:23 - Pranay Saksena: <Media omitted>
+01/01/23, 12:40 - Kanika Malkani: happy new year🎆
+01/01/23, 12:41 - Kanika Malkani: why have u disappeared from the face of the earth
+01/01/23, 12:42 - Pranay Saksena: Ouehee
+01/01/23, 12:43 - Pranay Saksena: Where have you been too ma'am!
+01/01/23, 12:44 - Pranay Saksena: No but you're right, I did go pretty anti social the past three months 🫣
+01/01/23, 12:46 - Kanika Malkani: here and there
+01/01/23, 12:46 - Kanika Malkani: why what happ
+01/01/23, 12:46 - Kanika Malkani: how's college
+01/01/23, 12:48 - Pranay Saksena: No genuinely
+01/01/23, 12:49 - Pranay Saksena: College drama oof, I'll tell you vistar me
+01/01/23, 12:50 - Pranay Saksena: It's going pretty well now! Kya mazaa aa rha hai
+01/01/23, 12:50 - Pranay Saksena: Aapka somasa kaisa chal rha hai
+01/01/23, 12:53 - Kanika Malkani: OMGGGG
+01/01/23, 12:53 - Kanika Malkani: lemme innnn
+01/01/23, 12:54 - Kanika Malkani: happy to hear thattt
+01/01/23, 12:54 - Kanika Malkani: you have a group now?
+01/01/23, 12:54 - Kanika Malkani: how do u know this 🤣
+01/01/23, 12:54 - Kanika Malkani: we may get our results today🫡
+01/01/23, 12:55 - Pranay Saksena: Yeappp
+01/01/23, 12:56 - Pranay Saksena: Kinda yeah, a hangout grp and a separate work group
+01/01/23, 12:57 - Pranay Saksena: Bro the name changed back in June when we met
+01/01/23, 12:57 - Pranay Saksena: Ouh, is that a happy salute or a serious salute?
+01/01/23, 12:59 - Kanika Malkani: ooooo
+01/01/23, 12:59 - Kanika Malkani: so you're a cool kid and a nerd
+01/01/23, 12:59 - Kanika Malkani: I thought samosa was a well kept secret🧐
+01/01/23, 13:00 - Kanika Malkani: What do you think
+01/01/23, 13:00 - Pranay Saksena: I think neither - it's a confused salute 😂
+01/01/23, 13:00 - Pranay Saksena: Ummmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm okay sure
+01/01/23, 13:01 - Pranay Saksena: I'm sure Anand waale bhaiya disagrees 🫣
+01/01/23, 13:02 - Pranay Saksena: But like a kinda-group yet
+01/01/23, 13:04 - Kanika Malkani: 😂😂😂😂😂😂
+01/01/23, 13:04 - Kanika Malkani: well I believe it's a serious Salute
+01/01/23, 13:04 - Kanika Malkani: hoping that they don't send in the results today
+01/01/23, 13:05 - Kanika Malkani: that never agree on being cool
+01/01/23, 13:05 - Pranay Saksena: Ouch okay fine I'm sorry IM SORRY
+01/01/23, 13:05 - Kanika Malkani: but they are
+01/01/23, 13:05 - Kanika Malkani: are they your ride or die kinda vibe
+01/01/23, 13:05 - Kanika Malkani: or not yet
+01/01/23, 13:06 - Pranay Saksena: I feel like I would get this phrase if those people were that
+01/01/23, 13:06 - Pranay Saksena: So I'd say not yet
+01/01/23, 13:06 - Pranay Saksena: Demn
+01/01/23, 13:06 - Pranay Saksena: Koi nahi you'll be fine re
+01/01/23, 13:07 - Kanika Malkani: all in good time I guess
+01/01/23, 13:07 - Pranay Saksena: Ooh I just got that 😂
+01/01/23, 13:07 - Kanika Malkani: tru but gpa gonna drop ahah
+01/01/23, 13:09 - Pranay Saksena: _"That GPA gonna drop harder than the beat dropped last midnight"_
+01/01/23, 13:09 - Pranay Saksena: Yeap
+01/01/23, 13:12 - Kanika Malkani: ~Pranay 2023
+01/01/23, 13:12 - Kanika Malkani: college starts tomorrow?
+01/01/23, 13:13 - Pranay Saksena: 😂😂😂😂
+01/01/23, 13:13 - Kanika Malkani: any updates on the relationship status 🧐
+01/01/23, 13:13 - Pranay Saksena: I hope that's my yearbook quote and not my gravestone 🤭
+01/01/23, 13:13 - Pranay Saksena: Yes 🥲
+01/01/23, 13:13 - Pranay Saksena: That's what the college drama was about 🤦‍♂️
+01/01/23, 13:14 - Kanika Malkani: no don't worry
+01/01/23, 13:14 - Kanika Malkani: you would've done too many iconic things till we reach your graveyard🤣
+01/01/23, 13:14 - Kanika Malkani: also angrez
+01/01/23, 13:14 - Kanika Malkani: no gravestone for us
+01/01/23, 13:15 - Kanika Malkani: OMGGGGGG
+01/01/23, 13:15 - Kanika Malkani: are you dating someone
+01/01/23, 13:15 - Kanika Malkani: shamelessly sounding so interrogative ahaha
+01/01/23, 13:15 - Pranay Saksena: Tru dat 😂
+01/01/23, 13:15 - Pranay Saksena: Yes sori
+01/01/23, 13:16 - Pranay Saksena: I would have been by now, if I wouldn't have found out she was such a bitch 🙄
+01/01/23, 13:17 - Pranay Saksena: I'm sorry but this is the first time I'm semi-vindictive about someone so I get to say this
+01/01/23, 13:17 - Kanika Malkani: OMG
+01/01/23, 13:17 - Kanika Malkani: can't wait to hear this
+01/01/23, 13:18 - Kanika Malkani: yes yes no one's judging here😌
+01/01/23, 13:18 - Kanika Malkani: Is she in your group tho
+01/01/23, 13:18 - Pranay Saksena: No chance in hell 🙄
+01/01/23, 13:18 - Kanika Malkani: 😂😂
+01/01/23, 13:18 - Kanika Malkani: He compulsively hates her
+01/01/23, 13:19 - Kanika Malkani: love to see it
+01/01/23, 13:19 - Pranay Saksena: Aye 😂
+01/01/23, 13:20 - Pranay Saksena: My story's for later, you tell me 🧐
+01/01/23, 13:20 - Kanika Malkani: don't use that sus emoji on me😂😂😂
+01/01/23, 13:21 - Pranay Saksena: No no right bacc at ya 😂
+01/01/23, 13:23 - Pranay Saksena: Well I'm still waiting...
+01/01/23, 13:25 - Kanika Malkani: 🫶🏻🫶🏻🫶🏻
+01/01/23, 13:25 - Kanika Malkani: let's hope someone makes u wait longer than I do with all my stories ahah🥰
+01/01/23, 13:28 - Pranay Saksena: 😶
+01/01/23, 13:28 - Pranay Saksena: 🙂
+01/01/23, 13:28 - Pranay Saksena: 🙂🙂
+01/01/23, 13:28 - Kanika Malkani: 🤣🤣🤣🤣🤣
+01/01/23, 13:28 - Kanika Malkani: still the og bitch you have in your life🫱🏻‍🫲🏻
+01/01/23, 13:29 - Pranay Saksena: I SWEAR TO GOD UGH
+01/01/23, 13:31 - Pranay Saksena: At least gimme a sentence like this and leave me in suspense
+01/01/23, 13:33 - Kanika Malkani: it'll give too much away🌚
+01/01/23, 13:36 - Kanika Malkani: oh you have a new reel
+01/01/23, 13:36 - Kanika Malkani: lemme see
+01/01/23, 13:36 - Pranay Saksena: Yeap
+01/01/23, 13:36 - Pranay Saksena: Read the poem in caption too
+01/01/23, 13:39 - Kanika Malkani: lingers an ethereal mist🫶🏻
+01/01/23, 13:42 - Pranay Saksena: Hehe ❤️
+01/01/23, 13:42 - Pranay Saksena: What'd you do for New Year's?
+01/01/23, 13:53 - Kanika Malkani: I'm actually in dehradun
+02/01/23, 09:37 - Pranay Saksena: Damn gotta know
+04/04/23, 19:28 - Pranay Saksena: Hey Kanika
+04/04/23, 19:29 - Pranay Saksena: A fellow NMIMS council member needed a contact from applied stats, I forwarded your number to him, his name is Shivam
+04/04/23, 19:29 - Pranay Saksena: He needs some study materials
+04/04/23, 20:06 - Kanika Malkani: hello
+04/04/23, 20:06 - Kanika Malkani: oh okay sure
+04/04/23, 20:06 - Kanika Malkani: how's it going
+02/05/23, 22:23 - Kanika Malkani: hi hi hi
+02/05/23, 22:23 - Kanika Malkani: did you reach home
+02/05/23, 22:27 - Pranay Saksena: Hi
+02/05/23, 22:27 - Pranay Saksena: Yeahh, I live two minutes away only 🏃
+02/05/23, 22:27 - Pranay Saksena: How was Theobroma?
+02/05/23, 22:31 - Kanika Malkani: 2nd cross lane no?
+02/05/23, 22:31 - Pranay Saksena: Yeah
+02/05/23, 22:31 - Kanika Malkani: so nice🥰
+02/05/23, 22:32 - Kanika Malkani: send in photos
+02/05/23, 22:32 - Pranay Saksena: <Media omitted>
+02/05/23, 22:32 - Pranay Saksena: <Media omitted>
+02/05/23, 22:32 - Pranay Saksena: <Media omitted>
+02/05/23, 22:32 - Pranay Saksena: <Media omitted>
+02/05/23, 22:32 - Pranay Saksena: <Media omitted>
+02/05/23, 22:32 - Pranay Saksena: <Media omitted>
+02/05/23, 22:32 - Pranay Saksena: <Media omitted>
+02/05/23, 22:32 - Pranay Saksena: <Media omitted>
+02/05/23, 22:32 - Pranay Saksena: <Media omitted>
+02/05/23, 22:32 - Pranay Saksena: Friends meet?
+02/05/23, 22:33 - Kanika Malkani: no no, didn't have my phone remember?
+02/05/23, 22:33 - Kanika Malkani: had to get some brownies for harsh ahah
+02/05/23, 22:34 - Pranay Saksena: Yeahhh
+02/05/23, 22:34 - Pranay Saksena: Ouh, noice
+02/05/23, 22:35 - Pranay Saksena: I read it as hash for some reason after brownies
+02/05/23, 22:55 - Kanika Malkani: ofc you did😂😂😂
+02/05/23, 22:56 - Kanika Malkani: it was
+02/05/23, 22:56 - Kanika Malkani: so nice meeting you tho
+02/05/23, 22:56 - Pranay Saksena: you're going somewhere or what
+02/05/23, 22:57 - Kanika Malkani: nahi
+02/05/23, 22:58 - Pranay Saksena: Then yeah it was nice meeting you too 😂
+02/05/23, 22:58 - Pranay Saksena: Bro
+02/05/23, 22:58 - Pranay Saksena: Ofc it was
+02/05/23, 22:59 - Kanika Malkani: 😂😂😂😂
+02/05/23, 22:59 - Kanika Malkani: true
+02/05/23, 22:59 - Pranay Saksena: Kitna things I didn't know I remembered
+02/05/23, 22:59 - Kanika Malkani: it's been so long tho
+02/05/23, 22:59 - Pranay Saksena: Bro I need to access those memories
+02/05/23, 22:59 - Kanika Malkani: I miss school now
+02/05/23, 22:59 - Pranay Saksena: And then remind you of your embarrassing ones too
+02/05/23, 23:00 - Pranay Saksena: I swear
+02/05/23, 23:00 - Kanika Malkani: 🤣🤣🤣🤣
+02/05/23, 23:00 - Pranay Saksena: 😅 rulaegi tu
+02/05/23, 23:00 - Kanika Malkani: now I remember
+02/05/23, 23:01 - Kanika Malkani: you sang that song during our farewell
+02/05/23, 23:01 - Kanika Malkani: and made us all cry
+02/05/23, 23:01 - Pranay Saksena: Aww
+02/05/23, 23:01 - Pranay Saksena: If its any consolation
+02/05/23, 23:01 - Pranay Saksena: I also cried
+02/05/23, 23:02 - Pranay Saksena: And I made rohan naitica and the entire gang on stage w me also cry
+02/05/23, 23:02 - Pranay Saksena: So in the end
+02/05/23, 23:02 - Pranay Saksena: We are all winners
+02/05/23, 23:02 - Kanika Malkani: and then everything changed
+02/05/23, 23:02 - Pranay Saksena: 😂
+02/05/23, 23:02 - Kanika Malkani: ok mom
+02/05/23, 23:02 - Pranay Saksena: Uk how teachers make you jump hoops and then says actually everybody is a winner
+02/05/23, 23:03 - Kanika Malkani: "whatever the outcome of this competition will be, in the end, we're all winners"
+02/05/23, 23:03 - Pranay Saksena: NO FUCK YOU MAAM I AM THE WINNER
+02/05/23, 23:04 - Pranay Saksena: Itna gussa aata tha
+02/05/23, 23:04 - Kanika Malkani: BUT U WON SO WHAT ARE U CRYING FOR🤣
+02/05/23, 23:04 - Kanika Malkani: Divy used to cry
+02/05/23, 23:04 - Kanika Malkani: and all his friends
+02/05/23, 23:04 - Pranay Saksena: Won what?
+02/05/23, 23:04 - Pranay Saksena: Ouh
+02/05/23, 23:04 - Kanika Malkani: for coming 2nd
+02/05/23, 23:05 - Pranay Saksena: Wtf why would you say that 😂😂😂
+02/05/23, 23:05 - Pranay Saksena: I know! Just why would you say that 😂
+02/05/23, 23:05 - Kanika Malkani: no but the way he cried man
+02/05/23, 23:05 - Pranay Saksena: He didn't cry did he?
+02/05/23, 23:05 - Kanika Malkani: "he has 8 years of advantage"
+02/05/23, 23:05 - Kanika Malkani: 😂😂😂😂😂
+02/05/23, 23:05 - Kanika Malkani: not literally
+02/05/23, 23:06 - Pranay Saksena: WTF he actually said that? 😂😂😂😂😂😂😂
+02/05/23, 23:06 - Kanika Malkani: yes
+02/05/23, 23:06 - Kanika Malkani: HOW DO U NOT KNOW THIS
+02/05/23, 23:06 - Pranay Saksena: maybe I heard it then too, but hearing it now like for the first time 😂😂😂
+02/05/23, 23:07 - Kanika Malkani: 😂😂😂😂it was really funny tho
+02/05/23, 23:08 - Pranay Saksena: It still is holy shit 😂
+02/05/23, 23:08 - Pranay Saksena: Don't make me start crying like that now
+02/05/23, 23:09 - Kanika Malkani: it's been 5 years, it's fine, it's life
+02/05/23, 23:09 - Kanika Malkani: there there
+02/05/23, 23:10 - Kanika Malkani: <Media omitted>
+02/05/23, 23:10 - Pranay Saksena: how do you have stickers on your laptop
+02/05/23, 23:11 - Kanika Malkani: I charged my phone😂
+02/05/23, 23:11 - Kanika Malkani: and you have stickers on your laptop too
+02/05/23, 23:11 - Pranay Saksena: <Media omitted>
+02/05/23, 23:11 - Pranay Saksena: OH YES
+02/05/23, 23:12 - Kanika Malkani: what are you doing on your laptop
+02/05/23, 23:13 - Pranay Saksena: Nah just tired of my phone
+02/05/23, 23:13 - Pranay Saksena: 10 din pehle used laptop for 12+ hrs a day
+02/05/23, 23:13 - Pranay Saksena: From that to no laptop since 10 days
+02/05/23, 23:13 - Pranay Saksena: Yaad aa gayi
+02/05/23, 23:14 - Kanika Malkani: for like projects and all right?
+02/05/23, 23:14 - Kanika Malkani: 😂😂😂😂😂😂😂😂
+02/05/23, 23:14 - Kanika Malkani: cheezo ki yaad aa gayi, humara maksad logo ki yaad dilaana tha
+02/05/23, 23:15 - Pranay Saksena: 😂😂😂😂😂
+02/05/23, 23:15 - Pranay Saksena: Yeahh
+02/05/23, 23:15 - Pranay Saksena: Everything
+02/05/23, 23:15 - Pranay Saksena: Calls and messages also slowly shifted to laptop
+02/05/23, 23:15 - Pranay Saksena: Becayuse baar baar device switch kaun kare
+02/05/23, 23:15 - Kanika Malkani: this is the max hindi I've typed today
+02/05/23, 23:15 - Kanika Malkani: or in a month
+02/05/23, 23:15 - Kanika Malkani: or a year
+02/05/23, 23:16 - Kanika Malkani: who are yoh
+02/05/23, 23:16 - Pranay Saksena: 😂😂😂
+02/05/23, 23:16 - Pranay Saksena: lol
+02/05/23, 23:17 - Pranay Saksena: Desigxer Pranay
+02/05/23, 23:17 - Kanika Malkani: wait
+02/05/23, 23:17 - Kanika Malkani: about this
+02/05/23, 23:17 - Kanika Malkani: I WANNA SEE
+02/05/23, 23:17 - Kanika Malkani: your projectsss
+02/05/23, 23:17 - Pranay Saksena: my work?
+02/05/23, 23:17 - Pranay Saksena: Ouh
+02/05/23, 23:17 - Pranay Saksena: Well some of it is published online
+02/05/23, 23:18 - Pranay Saksena: It's old work but its quite something
+02/05/23, 23:18 - Kanika Malkani: where where
+02/05/23, 23:18 - Kanika Malkani: send link
+02/05/23, 23:18 - Kanika Malkani: give access
+02/05/23, 23:19 - Pranay Saksena: Umm wait
+02/05/23, 23:19 - Pranay Saksena: Actually
+02/05/23, 23:19 - Pranay Saksena: Just type on google na
+02/05/23, 23:19 - Pranay Saksena: Pranay Saksena Behance
+02/05/23, 23:26 - Kanika Malkani: this is
+02/05/23, 23:26 - Kanika Malkani: so so so interesting
+02/05/23, 23:26 - Kanika Malkani: logo exploration
+02/05/23, 23:26 - Kanika Malkani: and when did you go to uttan
+02/05/23, 23:26 - Kanika Malkani: the yippee one is>>>>>
+02/05/23, 23:28 - Pranay Saksena: 2021 me gaya tha
+02/05/23, 23:28 - Pranay Saksena: It was funnn
+02/05/23, 23:28 - Pranay Saksena: Ahh thanks
+02/05/23, 23:29 - Pranay Saksena: Yeah
+02/05/23, 23:29 - Pranay Saksena: These were some of the initial projects
+02/05/23, 23:29 - Pranay Saksena: The ones I did this sem are much larger and full-scale
+02/05/23, 23:29 - Kanika Malkani: w fam?
+02/05/23, 23:29 - Pranay Saksena: Im yet to upload them
+02/05/23, 23:29 - Kanika Malkani: ooo okay
+02/05/23, 23:29 - Pranay Saksena: Na college trip
+02/05/23, 23:29 - Kanika Malkani: and what did you do the Visualizations on?
+02/05/23, 23:29 - Pranay Saksena: meant for photography
+02/05/23, 23:30 - Kanika Malkani: budget so high
+02/05/23, 23:30 - Kanika Malkani: how?
+02/05/23, 23:30 - Pranay Saksena: Illustrator and figma
+02/05/23, 23:30 - Pranay Saksena: Nah uttan is here only
+02/05/23, 23:30 - Pranay Saksena: Bhayander
+02/05/23, 23:30 - Kanika Malkani: ikkkk
+02/05/23, 23:30 - Kanika Malkani: I've been in august
+02/05/23, 23:30 - Kanika Malkani: this is sarcasm
+02/05/23, 23:30 - Kanika Malkani: when did you become Sheldon
+02/05/23, 23:31 - Pranay Saksena: Oh yah I did 😂
+02/05/23, 23:31 - Pranay Saksena: yeah I got that later
+02/05/23, 23:32 - Kanika Malkani: pending : PhD
+02/05/23, 23:32 - Pranay Saksena: Oh nice!
+02/05/23, 23:33 - Kanika Malkani: it was a day trip and I have no clue why we went
+02/05/23, 23:33 - Pranay Saksena: College friends ke saath?
+02/05/23, 23:34 - Kanika Malkani: w fam
+02/05/23, 23:35 - Pranay Saksena: Noice noice
+02/05/23, 23:35 - Pranay Saksena: So we were asked to make a photoessay
+02/05/23, 23:35 - Kanika Malkani: aha
+02/05/23, 23:35 - Pranay Saksena: So first spend an entire day clicking photos
+02/05/23, 23:35 - Pranay Saksena: Then form a story outta them
+02/05/23, 23:35 - Pranay Saksena: and then post processing
+02/05/23, 23:36 - Pranay Saksena: Achha
+02/05/23, 23:36 - Pranay Saksena: The photo you posted
+02/05/23, 23:36 - Pranay Saksena: Your last presentation
+02/05/23, 23:36 - Pranay Saksena: What was that about?
+02/05/23, 23:37 - Kanika Malkani: oooo
+02/05/23, 23:37 - Kanika Malkani: can we
+02/05/23, 23:37 - Kanika Malkani: switch careers
+02/05/23, 23:37 - Kanika Malkani: it was basically an attempt to incorporate facial recognition in a store
+02/05/23, 23:37 - Pranay Saksena: 😂 arey itna bt
+02/05/23, 23:37 - Kanika Malkani: we did it two ways
+02/05/23, 23:39 - Pranay Saksena: Haan it looked interesting in the phto
+02/05/23, 23:39 - Kanika Malkani: one was an attendance system for all the employs
+so whenever they enter, they automatically log in 
+
+and second was 
+creating a personalized customer experience 
+so using facial recognition a customer gets to log in to their account 
+and there was further curated discounts and a recommendation system at the back end
+02/05/23, 23:40 - Kanika Malkani: basically deployed the whole thing in one go
+02/05/23, 23:41 - Pranay Saksena: Damn
+02/05/23, 23:41 - Pranay Saksena: So wait
+02/05/23, 23:41 - Pranay Saksena: Youll did the coding and everything
+02/05/23, 23:41 - Pranay Saksena: Actually made a working prototype?
+02/05/23, 23:42 - Kanika Malkani: you*
+02/05/23, 23:42 - Kanika Malkani: yes
+02/05/23, 23:42 - Kanika Malkani: haanji
+02/05/23, 23:42 - Pranay Saksena: Damnnn
+02/05/23, 23:42 - Kanika Malkani: on our way to pitch it to Walmart 😂
+02/05/23, 23:42 - Pranay Saksena: WHERE DO I SEE IT
+02/05/23, 23:42 - Kanika Malkani: up on LinkedIn real soooon
+02/05/23, 23:42 - Kanika Malkani: are you on LinkedIn????
+02/05/23, 23:42 - Pranay Saksena: Tell me if you need contacts, I've got people from my college working there 😂
+02/05/23, 23:42 - Pranay Saksena: Yeah
+02/05/23, 23:44 - Pranay Saksena: Bitch I follow you already
+02/05/23, 23:54 - Kanika Malkani: 😂😂😂😂😂😂😂
+02/05/23, 23:54 - Kanika Malkani: lemme see
+02/05/23, 23:58 - Kanika Malkani: I see you ahah
+02/05/23, 23:59 - Pranay Saksena: LinkedIn has like less than half the stuff I've done
+03/05/23, 00:02 - Pranay Saksena: Bro I wanna know your projects
+03/05/23, 00:02 - Pranay Saksena: Right now our projects are a lot concept based
+03/05/23, 00:03 - Pranay Saksena: For their execution we gotta collab with engineers and data people
+03/05/23, 08:23 - Kanika Malkani: oo okay
+03/05/23, 08:23 - Kanika Malkani: same na, it's all a hypothetical deployment
+03/05/23, 08:23 - Kanika Malkani: Although we do back up our ideas w an industry expert
+04/05/23, 18:15 - Pranay Saksena: https://youtu.be/7mSH86O2qzA
+07/05/23, 15:34 - Kanika Malkani: hellooo
+07/05/23, 15:34 - Kanika Malkani: when does college start
+07/05/23, 15:42 - Pranay Saksena: Hi
+07/05/23, 15:43 - Pranay Saksena: I'm in Surat rn, going to Baroda tomo
+07/05/23, 15:44 - Kanika Malkani: wedding naaa
+07/05/23, 15:44 - Pranay Saksena: My internship starts earlier, May 22nd, college starts in first week of July
+07/05/23, 15:44 - Pranay Saksena: Yeah!
+07/05/23, 15:44 - Pranay Saksena: Nice place it is
+07/05/23, 15:44 - Pranay Saksena: <Media omitted>
+07/05/23, 15:44 - Kanika Malkani: offline internship?
+07/05/23, 15:44 - Pranay Saksena: Yeah, Aarey me hai
+07/05/23, 15:44 - Kanika Malkani: oooo
+07/05/23, 15:44 - Kanika Malkani: wait so
+07/05/23, 15:45 - Kanika Malkani: is it a destination wedding or do they live there
+07/05/23, 15:45 - Kanika Malkani: ooo okay
+07/05/23, 15:45 - Pranay Saksena: So it's both: they live in Surat so two functions are there, tomorrow morning we leave for Baroda for the wedding
+07/05/23, 15:46 - Kanika Malkani: ohhh
+07/05/23, 15:46 - Kanika Malkani: how far is baroda from surat?
+07/05/23, 15:46 - Pranay Saksena: I will have to check, I've just been going with the flow since today morning
+07/05/23, 15:46 - Kanika Malkani: 😂😂😂
+07/05/23, 15:46 - Kanika Malkani: aha okay
+07/05/23, 15:46 - Kanika Malkani: send shaadi fits
+07/05/23, 15:47 - Pranay Saksena: Yessss, aaj shaam ko sangeet hai, formals noice noice waale
+07/05/23, 15:48 - Pranay Saksena: Formals for the sangeet, trads for haldi tomo morning and shaadi in the evening
+07/05/23, 15:48 - Kanika Malkani: all needs to be captured
+07/05/23, 15:48 - Kanika Malkani: and sent
+07/05/23, 15:48 - Pranay Saksena: Yes pakka pakka
+07/05/23, 15:48 - Pranay Saksena: Also
+07/05/23, 15:48 - Pranay Saksena: I have news
+07/05/23, 15:49 - Pranay Saksena: For the sangeet function
+07/05/23, 15:49 - Pranay Saksena: <Media omitted>
+07/05/23, 15:49 - Kanika Malkani: OMGGGGGG
+07/05/23, 15:49 - Kanika Malkani: LESSGOOOOOOOO
+07/05/23, 15:50 - Kanika Malkani: <Media omitted>
+07/05/23, 15:50 - Kanika Malkani: photos just got updated to videos
+07/05/23, 15:50 - Kanika Malkani: and which songs will you be singing
+07/05/23, 15:50 - Kanika Malkani: first shaadi you're performing at???
+07/05/23, 15:50 - Pranay Saksena: Yess 😄🤞
+07/05/23, 15:50 - Pranay Saksena: I'm so excited
+07/05/23, 15:51 - Pranay Saksena: I'll send video, tab tak surprise ✨
+07/05/23, 15:51 - Kanika Malkani: 🥰🥰🥰🥰🥰
+07/05/23, 15:51 - Kanika Malkani: cannot wait
+07/05/23, 15:52 - Pranay Saksena: null
+07/05/23, 15:52 - Kanika Malkani: shaved, trimmed all ready to go ahah
+07/05/23, 15:53 - Pranay Saksena: Yheehooo
+07/05/23, 15:54 - Pranay Saksena: Abhi I'll go practice
+07/05/23, 15:54 - Pranay Saksena: Raat ko if I'm alive I'll text
+07/05/23, 15:54 - Kanika Malkani: I can
+07/05/23, 15:54 - Kanika Malkani: hear you
+07/05/23, 15:54 - Kanika Malkani: 😂😂😂
+07/05/23, 15:54 - Kanika Malkani: video video video
+07/05/23, 15:55 - Pranay Saksena: 😂 personality seeps thru
+07/05/23, 15:55 - Pranay Saksena: YESSS
+07/05/23, 16:01 - Pranay Saksena: null
+07/05/23, 16:02 - Kanika Malkani: tha audience is lucky🥰
+07/05/23, 23:13 - Pranay Saksena: <Media omitted>
+07/05/23, 23:18 - Kanika Malkani: manz
+07/05/23, 23:18 - Kanika Malkani: 😍😍😍😍😍
+07/05/23, 23:18 - Kanika Malkani: The tie is everything
+07/05/23, 23:18 - Pranay Saksena: I swear.
+07/05/23, 23:19 - Kanika Malkani: how was the performance
+07/05/23, 23:19 - Pranay Saksena: Beech me guitar mic kharaab ho gaya, not as well as it should have gone
+07/05/23, 23:20 - Pranay Saksena: But the audience was so supportive
+07/05/23, 23:20 - Pranay Saksena: I mean so supportive
+07/05/23, 23:20 - Kanika Malkani: aiyo but that's finee
+07/05/23, 23:20 - Kanika Malkani: <Media omitted>
+07/05/23, 23:20 - Pranay Saksena: When they figured it's a technical issue they cheered louder
+07/05/23, 23:21 - Pranay Saksena: So many people came to me afterwards, saying amazing tha
+07/05/23, 23:22 - Kanika Malkani: aur kya hi chahiye
+07/05/23, 23:22 - Pranay Saksena: Yeah
+07/05/23, 23:22 - Pranay Saksena: I mean
+07/05/23, 23:22 - Kanika Malkani: where's the video🧐
+07/05/23, 23:22 - Pranay Saksena: I literally fixed a new set together at 3am today
+07/05/23, 23:23 - Pranay Saksena: So for that it went really really well
+07/05/23, 23:23 - Kanika Malkani: 😳😳😳
+07/05/23, 23:24 - Pranay Saksena: I haven't watched it, but I'm guessing the video is not that good 😅
+07/05/23, 23:24 - Kanika Malkani: 🥺aye
+07/05/23, 23:24 - Kanika Malkani: how long was it?
+07/05/23, 23:24 - Pranay Saksena: I had tanhaai songs so far and I had to change the mood for this performance
+07/05/23, 23:25 - Pranay Saksena: Five minutes I think, if I got to do the full thing it would have been ten
+07/05/23, 23:25 - Kanika Malkani: wait so
+07/05/23, 23:25 - Kanika Malkani: you didn't continue after the guitar mishap?
+07/05/23, 23:25 - Kanika Malkani: rightt
+07/05/23, 23:26 - Pranay Saksena: I did, but then the other mic also failed, so i finished the fifth song anyway and said thank you 😂
+07/05/23, 23:26 - Kanika Malkani: fifth
+07/05/23, 23:26 - Kanika Malkani: hmmmm
+07/05/23, 23:26 - Kanika Malkani: mannnn whateven
+07/05/23, 23:27 - Kanika Malkani: logistic goals ftw
+07/05/23, 23:27 - Pranay Saksena: Yeah, it was a mashup na of ten songs
+07/05/23, 23:27 - Kanika Malkani: need the band baaja baarat gang ahah
+07/05/23, 23:27 - Pranay Saksena: Ftw kya hota hai
+07/05/23, 23:27 - Pranay Saksena: 😂
+07/05/23, 23:27 - Kanika Malkani: wtf ka ulta
+07/05/23, 23:27 - Pranay Saksena: Ouh lol
+07/05/23, 23:27 - Kanika Malkani: kidding
+07/05/23, 23:27 - Kanika Malkani: for the win
+07/05/23, 23:28 - Pranay Saksena: I bought it Kanika 😂🤦‍♂️
+07/05/23, 23:28 - Kanika Malkani: 😂😂😂😂😂😂😂mannn
+07/05/23, 23:28 - Kanika Malkani: should've left you w it
+07/05/23, 23:29 - Pranay Saksena: I slept 45mins last night, take as much advantage of me as you want 🥲
+07/05/23, 23:29 - Kanika Malkani: on that note
+07/05/23, 23:29 - Pranay Saksena: 😂
+07/05/23, 23:29 - Kanika Malkani: ARE THERE CUTE GIRLS AT THE SHAADI
+07/05/23, 23:29 - Kanika Malkani: <Media omitted>
+07/05/23, 23:30 - Pranay Saksena: Bro I'm not lying when I say I WISHED THERE WERE
+07/05/23, 23:30 - Pranay Saksena: The only cute girl is 26 years old, and she has a boyfriend sharing a hotel room w me 🥲
+07/05/23, 23:30 - Kanika Malkani: nooooooooo
+07/05/23, 23:30 - Kanika Malkani: see this would've never happened at a Mumbai wedding
+07/05/23, 23:31 - Pranay Saksena: HE'S LITERALLY IN FRONT OF ME RN
+07/05/23, 23:31 - Kanika Malkani: you call 10 people also 50% crowd will be gorgeous girls
+07/05/23, 23:31 - Pranay Saksena: Umm okay ig
+07/05/23, 23:31 - Kanika Malkani: 😃
+07/05/23, 23:31 - Kanika Malkani: this story is😃
+07/05/23, 23:31 - Pranay Saksena: What does that mean 😂
+07/05/23, 23:31 - Kanika Malkani: but she's 26
+07/05/23, 23:31 - Kanika Malkani: eh
+07/05/23, 23:32 - Kanika Malkani: sucha plot twist I didn't see coming
+07/05/23, 23:32 - Pranay Saksena: There's another really hot girl tho
+07/05/23, 23:32 - Pranay Saksena: But she's the bride 🥲
+07/05/23, 23:32 - Kanika Malkani: ooooo oki
+07/05/23, 23:32 - Kanika Malkani: 😂😂😂😂😂😂😂😂😂😂😂😂😂😂
+07/05/23, 23:32 - Kanika Malkani: mannnn
+07/05/23, 23:32 - Kanika Malkani: I've heard harsh say the same thing🥹
+07/05/23, 23:33 - Kanika Malkani: and then dude went like, "this is her first marriage, let her get back from her honeymoon, imma make her fall in love w me"
+07/05/23, 23:34 - Pranay Saksena: Send me his number na, I found a new best friend
+07/05/23, 23:34 - Kanika Malkani: 😂😂😂😂😂
+07/05/23, 23:34 - Pranay Saksena: Bro i thot Gujaratis matlab kuch to milega
+07/05/23, 23:35 - Kanika Malkani: na acha khaana na achi ladkiyaan?
+07/05/23, 23:35 - Kanika Malkani: khaana toh acha hoga
+07/05/23, 23:35 - Pranay Saksena: Khaana is mast
+07/05/23, 23:35 - Kanika Malkani: fir sab changa si
+07/05/23, 23:35 - Kanika Malkani: waittt
+07/05/23, 23:35 - Pranay Saksena: Atleast one of them is nice to eat
+07/05/23, 23:35 - Kanika Malkani: what's your brother's situation like
+07/05/23, 23:36 - Kanika Malkani: <Media omitted>
+07/05/23, 23:36 - Kanika Malkani: mannnn
+07/05/23, 23:36 - Pranay Saksena: As in girl situation?
+07/05/23, 23:36 - Kanika Malkani: yes ji
+07/05/23, 23:36 - Kanika Malkani: adopted my lingo in a sec😂
+07/05/23, 23:37 - Pranay Saksena: Hehe you are jaadu and I am 45mins sleep guy
+07/05/23, 23:37 - Pranay Saksena: I genuinely don't know
+07/05/23, 23:37 - Pranay Saksena: Most likely he doesn't have a girlfriend
+07/05/23, 23:38 - Pranay Saksena: But he's in no hurry to get married
+07/05/23, 23:38 - Kanika Malkani: WDYM
+07/05/23, 23:38 - Kanika Malkani: are y'all even
+07/05/23, 23:38 - Kanika Malkani: siblings
+07/05/23, 23:38 - Pranay Saksena: Yeahhh😂
+07/05/23, 23:38 - Kanika Malkani: how old is he again
+07/05/23, 23:38 - Pranay Saksena: He doesnt have one, but kuch chala rha hoga kisi ke saath
+07/05/23, 23:39 - Kanika Malkani: why u saying that about your bhai
+07/05/23, 23:39 - Kanika Malkani: also
+07/05/23, 23:39 - Kanika Malkani: I think
+07/05/23, 23:39 - Kanika Malkani: if you've successfully reached your room
+07/05/23, 23:39 - Kanika Malkani: pls go to sleep
+07/05/23, 23:39 - Kanika Malkani: 45 mins sleep ain't good
+07/05/23, 23:40 - Pranay Saksena: Ig yeah
+07/05/23, 23:40 - Pranay Saksena: I'll go quickly then, kal baat karte ha
+07/05/23, 23:41 - Kanika Malkani: yes ji
+07/05/23, 23:41 - Kanika Malkani: Goodnight 🥰
+08/05/23, 17:24 - Pranay Saksena: Heyyo
+08/05/23, 17:25 - Pranay Saksena: I literally dropped before I could see this
+08/05/23, 17:25 - Pranay Saksena: Thanks for this re🙏
+08/05/23, 17:27 - Pranay Saksena: Arey 😂 I mean if he has something going on he prolly won't tell, until he is committed
+08/05/23, 17:27 - Pranay Saksena: Aaj subah haldi hui, mast mazaa aaya
+08/05/23, 17:27 - Pranay Saksena: I'm behind this guy to gimme my photos
+08/05/23, 22:41 - Kanika Malkani: 😂😂😂😂😂😂man
+08/05/23, 22:41 - Kanika Malkani: achaa
+08/05/23, 22:41 - Kanika Malkani: you should
+08/05/23, 22:42 - Kanika Malkani: bond w your sibling
+08/05/23, 22:42 - Kanika Malkani: it'll make you cringe
+08/05/23, 22:42 - Kanika Malkani: but so worth it
+08/05/23, 22:42 - Kanika Malkani: plays kabira in the background
+08/05/23, 22:42 - Kanika Malkani: video firstttt!!!
+08/05/23, 22:42 - Kanika Malkani: and
+08/05/23, 22:42 - Kanika Malkani: have you seen community?
+08/05/23, 23:21 - Pranay Saksena: Been there 😂🙏
+08/05/23, 23:21 - Pranay Saksena: It is
+08/05/23, 23:21 - Pranay Saksena: Haan mast hota tha
+08/05/23, 23:22 - Pranay Saksena: It's too large, this friend of mine is sending a drive link
+08/05/23, 23:23 - Pranay Saksena: The problem is he's w me and network here is bad
+08/05/23, 23:23 - Pranay Saksena: That's a show?
+08/05/23, 23:52 - Kanika Malkani: 84 years later
+08/05/23, 23:53 - Kanika Malkani: yussss
+08/05/23, 23:53 - Kanika Malkani: on Netflix
+08/05/23, 23:53 - Pranay Saksena: 😭
+08/05/23, 23:53 - Pranay Saksena: Ouh
+08/05/23, 23:54 - Pranay Saksena: I'm on an unintentional Netflix detox
+08/05/23, 23:54 - Kanika Malkani: same same
+08/05/23, 23:54 - Pranay Saksena: Life me entertainment ka zarurat kam lag rha hai
+08/05/23, 23:54 - Pranay Saksena: Reality me hi itna mazaa aa rha hai
+08/05/23, 23:55 - Kanika Malkani: sounding like Sima aunty
+08/05/23, 23:56 - Pranay Saksena: Lol
+08/05/23, 23:56 - Pranay Saksena: I never completed that show
+09/05/23, 00:12 - Kanika Malkani: same😂😂😂😂
+09/05/23, 05:55 - Pranay Saksena: <Media omitted>
+09/05/23, 08:25 - Kanika Malkani: I love how a simple tie/dupatta accentuates your entire look
+09/05/23, 23:29 - Pranay Saksena: I know right, 20 years and I'm finding out about it now
+09/05/23, 23:30 - Pranay Saksena: Also, I'm bacc home ✨
+09/05/23, 23:30 - Pranay Saksena: Reached by 12 ish and dropped dead, woke up 4hrs later
+09/05/23, 23:31 - Pranay Saksena: Drooling over my pillow like I was dead 😂
+10/05/23, 11:10 - Kanika Malkani: this was literally me after my exam ahah
+10/05/23, 11:10 - Kanika Malkani: literally woke up at 8 or some tho
+10/05/23, 13:47 - Pranay Saksena: Ah tru
+10/05/23, 13:47 - Pranay Saksena: Falling dead ka importance tab pata chalta hai
+10/05/23, 13:48 - Pranay Saksena: Are you free evening 7 ko?
+10/05/23, 19:11 - Kanika Malkani: hello
+10/05/23, 19:12 - Kanika Malkani: I have an exam tomorrow ahah
+10/05/23, 19:12 - Kanika Malkani: falling on the bed can lead to failing tomorrow's paper tho👍🏻
+10/05/23, 19:13 - Pranay Saksena: Ouh damn how many exams you have left?
+10/05/23, 19:13 - Pranay Saksena: Aah nou, study beta study
+10/05/23, 19:14 - Kanika Malkani: 3
+15/05/23, 11:44 - Pranay Saksena: null
+15/05/23, 11:50 - Kanika Malkani: looks cute
+15/05/23, 11:50 - Kanika Malkani: but the skulls are giving 2011 rock band vibes
+15/05/23, 12:15 - Pranay Saksena: More rad than cute
+15/05/23, 12:15 - Pranay Saksena: I want to wear this where nobody knows me and see
+15/05/23, 12:16 - Pranay Saksena: I'll develop a new personality also to show them
+15/05/23, 12:16 - Pranay Saksena: Hehe yheeeeee
+15/05/23, 12:18 - Kanika Malkani: cute is my goto word
+15/05/23, 12:18 - Kanika Malkani: lemme live
+15/05/23, 12:18 - Pranay Saksena: Yes yes cute also works
+15/05/23, 12:18 - Kanika Malkani: thanku
+15/05/23, 12:18 - Kanika Malkani: if we were in the US
+15/05/23, 12:18 - Kanika Malkani: you could've gotten this jacket on rent
+15/05/23, 12:19 - Kanika Malkani: hit up a few bars
+15/05/23, 12:19 - Kanika Malkani: and boom
+15/05/23, 12:19 - Kanika Malkani: job done
+15/05/23, 12:19 - Pranay Saksena: Ahhhh
+15/05/23, 12:19 - Pranay Saksena: Noice
+15/05/23, 12:20 - Pranay Saksena: How do I get to the US
+15/05/23, 12:23 - Kanika Malkani: moni
+15/05/23, 12:24 - Kanika Malkani: but the situation rn is
+15/05/23, 12:24 - Kanika Malkani: <Media omitted>
+15/05/23, 12:25 - Pranay Saksena: Oh my god I love this 😂😂😂😂😂😂😂😂
+15/05/23, 12:25 - Kanika Malkani: those nails cost more than $3 but sure😂
+15/05/23, 12:26 - Pranay Saksena: 😂😂😂
+15/05/23, 12:27 - Pranay Saksena: Arey re 240 rupees
+15/05/23, 12:27 - Pranay Saksena: Chhori gandi thai gai
+15/05/23, 12:27 - Kanika Malkani: that's 6
+15/05/23, 12:27 - Pranay Saksena: So one dollar is 40 rupees?
+15/05/23, 12:27 - Kanika Malkani: yes
+15/05/23, 12:28 - Kanika Malkani: 😂😂😂😂😂😂😂😂
+15/05/23, 12:28 - Pranay Saksena: 🤷‍♂️
+15/05/23, 12:28 - Pranay Saksena: Big Brain Time
+15/05/23, 12:28 - Kanika Malkani: 🤣🤣🤣🤣🤣🤣
+15/05/23, 12:28 - Kanika Malkani: did the internship start
+15/05/23, 12:28 - Pranay Saksena: 22nd, next Monday aaah
+15/05/23, 12:28 - Kanika Malkani: are you excited
+15/05/23, 12:29 - Pranay Saksena: Yesterday tho I took up a freelance project with a team, went to Vikramgad for that
+15/05/23, 12:29 - Pranay Saksena: Ughh yes and no?
+15/05/23, 12:29 - Pranay Saksena: They are the best NGO there is in terms of college requirements
+15/05/23, 12:29 - Kanika Malkani: oh that's exciting!!
+15/05/23, 12:30 - Pranay Saksena: But they're annoying
+15/05/23, 12:30 - Kanika Malkani: oh?😂
+15/05/23, 12:30 - Pranay Saksena: They want us to work 9hrs a day
+15/05/23, 12:30 - Kanika Malkani: wdym
+15/05/23, 12:30 - Kanika Malkani: ouchh
+15/05/23, 12:30 - Pranay Saksena: Mom - Sat
+15/05/23, 12:30 - Pranay Saksena: Mon*
+15/05/23, 12:30 - Kanika Malkani: every intern is expected to do that lmao
+15/05/23, 12:30 - Pranay Saksena: Noooo there are some giving 3hrs also
+15/05/23, 12:31 - Pranay Saksena: College wants 30 days/170hrs
+15/05/23, 12:31 - Kanika Malkani: it's an ngo na
+15/05/23, 12:31 - Kanika Malkani: oh
+15/05/23, 12:31 - Pranay Saksena: Ours will be 30*9 = 270 hrs 😭
+15/05/23, 12:31 - Pranay Saksena: That also they're not paying us for
+15/05/23, 12:32 - Pranay Saksena: Yeahhhh
+15/05/23, 12:32 - Kanika Malkani: paisa toh will never come w something u love😃
+15/05/23, 12:32 - Kanika Malkani: but you gotta still keep moving
+15/05/23, 12:32 - Kanika Malkani: have that side hustle
+15/05/23, 12:33 - Pranay Saksena: 🙄
+15/05/23, 12:33 - Pranay Saksena: I got 10k per month my last design internship
+15/05/23, 12:33 - Pranay Saksena: The one right after first year 🥲
+15/05/23, 12:33 - Kanika Malkani: that is
+15/05/23, 12:33 - Kanika Malkani: amazing
+15/05/23, 12:34 - Kanika Malkani: did you enjoy that internship
+15/05/23, 12:34 - Kanika Malkani: learning experience?
+15/05/23, 12:34 - Pranay Saksena: Yeahhh!
+15/05/23, 12:34 - Pranay Saksena: Wonderful wonderful. I felt he could have given more work, could have tired me out, but that's fine
+15/05/23, 12:34 - Pranay Saksena: He was super nice
+15/05/23, 12:35 - Pranay Saksena: But yes
+15/05/23, 12:35 - Pranay Saksena: This is also tru
+15/05/23, 12:35 - Kanika Malkani: 😂😂😂😂😂😂
+15/05/23, 12:35 - Kanika Malkani: man
+15/05/23, 12:36 - Kanika Malkani: the og nerd
+15/05/23, 12:36 - Kanika Malkani: we love it
+15/05/23, 12:37 - Pranay Saksena: 😂😂
+15/05/23, 12:37 - Pranay Saksena: Arey arey
+15/05/23, 12:37 - Pranay Saksena: Having me work for him was his last hustle
+15/05/23, 12:38 - Pranay Saksena: He shifted to Taiwan after that
+15/05/23, 12:38 - Pranay Saksena: He's doing well-o-well
+15/05/23, 12:38 - Kanika Malkani: oh
+15/05/23, 12:38 - Kanika Malkani: for what tho
+15/05/23, 12:38 - Pranay Saksena: He moved in with his girlf
+15/05/23, 12:38 - Kanika Malkani: 😏
+15/05/23, 12:38 - Kanika Malkani: <Media omitted>
+15/05/23, 12:39 - Pranay Saksena: Starting a life together
+15/05/23, 12:39 - Kanika Malkani: the goal🥰
+15/05/23, 12:39 - Pranay Saksena: Well that's another way to look at it 😂😂😂
+15/05/23, 12:39 - Kanika Malkani: 😂😂😂😂😂😂😂😂
+15/05/23, 12:39 - Kanika Malkani: that's the only way you should look at it😂
+15/05/23, 12:40 - Pranay Saksena: Yeah! Great designer + well settled, he's made me very jealous for an internship
+15/05/23, 12:40 - Kanika Malkani: ahahha
+15/05/23, 12:40 - Kanika Malkani: you have someone to lookup to
+15/05/23, 12:40 - Kanika Malkani: except the Taiwan part
+15/05/23, 12:40 - Pranay Saksena: 😂😂😂😂 a'ight a'ight
+15/05/23, 12:41 - Pranay Saksena: Wth 😂😂😂😂😂
+15/05/23, 12:41 - Pranay Saksena: Why noy
+15/05/23, 12:41 - Kanika Malkani: 😂😂😂😂😂
+15/05/23, 12:41 - Kanika Malkani: choose british or angrez
+15/05/23, 12:41 - Pranay Saksena: Bro
+15/05/23, 12:42 - Pranay Saksena: I got what you meant, but these both are the same 😂
+15/05/23, 12:42 - Kanika Malkani: angrez for me is US or Canada peeps
+15/05/23, 12:42 - Pranay Saksena: Oh
+15/05/23, 12:43 - Kanika Malkani: 😂😂😂
+15/05/23, 12:43 - Pranay Saksena: US toh I'm definitely not going
+15/05/23, 12:43 - Kanika Malkani: whyy
+15/05/23, 12:43 - Pranay Saksena: If a country is more fucked than your semester grades don't go there
+15/05/23, 12:43 - Kanika Malkani: 😂😂😂😂
+15/05/23, 12:43 - Kanika Malkani: but moni>>>
+15/05/23, 12:44 - Pranay Saksena: Design ke liye money I can get in UK or Canada
+15/05/23, 12:44 - Pranay Saksena: Better than US actually, US is actually further behind in design than India
+15/05/23, 12:45 - Pranay Saksena: It's not pretty but it's tru ✌️
+15/05/23, 12:45 - Kanika Malkani: omg really
+15/05/23, 12:45 - Kanika Malkani: hmmm interesting
+15/05/23, 12:45 - Kanika Malkani: UK for tech jobs is like 🤮
+15/05/23, 12:45 - Pranay Saksena: Oh lol
+15/05/23, 12:45 - Pranay Saksena: Idk that
+15/05/23, 12:45 - Pranay Saksena: Didn't*
+15/05/23, 12:46 - Kanika Malkani: like
+15/05/23, 12:46 - Kanika Malkani: everyone is doing their masters
+15/05/23, 12:46 - Kanika Malkani: and coming back without a job
+15/05/23, 12:46 - Kanika Malkani: that ROI is traumatized 🤣
+15/05/23, 12:46 - Pranay Saksena: Ouch fir kya fayda
+15/05/23, 12:46 - Kanika Malkani: yea like they're spending an easy 60L
+15/05/23, 12:47 - Kanika Malkani: for a year
+15/05/23, 12:47 - Pranay Saksena: Post grad?
+15/05/23, 12:47 - Kanika Malkani: yes ji
+15/05/23, 12:47 - Pranay Saksena: Oh oh
+15/05/23, 12:47 - Pranay Saksena: Sucks theb
+15/05/23, 12:48 - Pranay Saksena: I want to go to the US for my post grad tho
+15/05/23, 12:48 - Kanika Malkani: 😃
+15/05/23, 12:48 - Pranay Saksena: Art Center is the where all my favourite faculty got their masters from ✨
+15/05/23, 12:49 - Kanika Malkani: so when you said further behind you didn't mean in terms of education also
+15/05/23, 12:49 - Pranay Saksena: No no
+15/05/23, 12:49 - Pranay Saksena: Just in terms of growth opportunities and innovation
+15/05/23, 12:50 - Kanika Malkani: aha okay
+15/05/23, 12:50 - Pranay Saksena: Job ya startup won't be as beneficial there basically
+15/05/23, 12:50 - Kanika Malkani: cuz they got like technology covered pretty well
+15/05/23, 12:50 - Kanika Malkani: and that is a huge aspect for design also na?
+15/05/23, 12:51 - Pranay Saksena: Yeah it is, tho there are other factors too
+15/05/23, 12:51 - Pranay Saksena: What I've heard is you can't innovate there, you gotta follow structured formulas by people
+15/05/23, 12:52 - Pranay Saksena: For certain fields of design
+15/05/23, 12:52 - Pranay Saksena: But yeah still gotta keep eyes open
+15/05/23, 12:53 - Kanika Malkani: oh
+15/05/23, 12:53 - Kanika Malkani: very restrained
+15/05/23, 12:53 - Kanika Malkani: wait but
+15/05/23, 12:53 - Kanika Malkani: do you have to have a masters for design
+15/05/23, 12:53 - Kanika Malkani: obviously it's always better
+15/05/23, 12:54 - Kanika Malkani: but you can do pretty well w your degree?
+15/05/23, 12:54 - Pranay Saksena: I mean I freelance even now
+15/05/23, 12:54 - Pranay Saksena: Commercially, no
+15/05/23, 12:55 - Pranay Saksena: Career growth and roi masters ke baad hi milega
+15/05/23, 12:56 - Kanika Malkani: aiyooo oki
+15/05/23, 12:56 - Kanika Malkani: interesting
+15/05/23, 12:56 - Kanika Malkani: so you'll directly go for your masters? or too soon to decide
+15/05/23, 12:57 - Kanika Malkani: Also I have to go study now, I shall talk/meet you tomorrow
+15/05/23, 12:57 - Pranay Saksena: 2 yrs experience i want before masters
+15/05/23, 12:57 - Kanika Malkani: nice
+15/05/23, 12:57 - Pranay Saksena: Yeap
+15/05/23, 12:57 - Pranay Saksena: But wait
+15/05/23, 12:57 - Pranay Saksena: When do exams get over
+15/05/23, 12:57 - Kanika Malkani: tomorrow 😂
+15/05/23, 12:58 - Pranay Saksena: Achha 😂 go study study, mind free karke text karna
+15/05/23, 12:58 - Pranay Saksena: Chalo
+15/05/23, 12:58 - Pranay Saksena: Byeee
+15/05/23, 12:58 - Kanika Malkani: bye
+17/05/23, 20:17 - Pranay Saksena: Jatin se work out hua?
+17/05/23, 20:21 - Kanika Malkani: helloo
+17/05/23, 20:21 - Kanika Malkani: yes it did, thank you so muchhj
+17/05/23, 20:21 - Pranay Saksena: No problemo
+18/05/23, 00:03 - Pranay Saksena: If you're free we can wish him on con call ?
+18/05/23, 09:16 - Kanika Malkani: hi
+18/05/23, 09:16 - Kanika Malkani: I slept eheh
+18/05/23, 09:16 - Kanika Malkani: did you call him
+18/05/23, 11:24 - Pranay Saksena: Heyyo
+18/05/23, 11:25 - Pranay Saksena: I texted him, didn't feel like he'd be free at 12
+18/05/23, 13:08 - Kanika Malkani: aha okay
+18/05/23, 13:19 - Pranay Saksena: Ji aap aaj ya kal shaam free ho
+18/05/23, 13:19 - Pranay Saksena: Internship se pehle ek baar milna tha, Sat - Sun is thoda dicey
+18/05/23, 13:20 - Kanika Malkani: sat sun even I'm out
+18/05/23, 13:20 - Kanika Malkani: tomorrow I'm super busy
+18/05/23, 13:20 - Kanika Malkani: so let's meet aaj
+18/05/23, 13:30 - Pranay Saksena: 7.30, opposite celebrations club?
+18/05/23, 13:31 - Kanika Malkani: 7 works kya
+18/05/23, 13:33 - Pranay Saksena: Tight ho jayega thodu
+18/05/23, 13:34 - Pranay Saksena: Lemme try
+18/05/23, 13:34 - Pranay Saksena: 9 tak we can walk right
+18/05/23, 13:44 - Kanika Malkani: might have another plan at 8.30ish😬
+18/05/23, 17:25 - Pranay Saksena: I'm gonna get done w work earlier, in college rn
+18/05/23, 17:25 - Pranay Saksena: 7 can work
+18/05/23, 17:37 - Kanika Malkani: whattt
+18/05/23, 17:37 - Kanika Malkani: vacation where
+18/05/23, 17:37 - Pranay Saksena: Haan 😂
+18/05/23, 17:38 - Pranay Saksena: I'm working on a project w a few friends, it's fun
+18/05/23, 17:39 - Kanika Malkani: haan but vacation mein they allow u in college?
+18/05/23, 19:34 - Pranay Saksena: ??
+18/05/23, 21:04 - Pranay Saksena: 🎉🎉🎉🎉🎉🎉
+
+We are happy to announce that *Inner Engineering Completion Program (in-person)* is happening in *Powai* from 24-25 June 2023.
+
+🌸 *Inner Engineering Completion* is a 2-day in-person program facilitated by an Isha Instructor trained by Sadhguru.
+
+🌸 This program offers the transmission of *Shambhavi Mahamudra Kriya*, an ancient, purifying 21-minute yoga practice of immeasurable transformative power that Sadhguru has brought to the modern world. 
+
+🪻 *Pre-Requisite*
+Completion of all 7 sessions of IEO
+
+🔰 *Click here for more information and to register* http://isha.co/powai-iec
+
+Pranam 🙏🏻
+18/05/23, 21:04 - Pranay Saksena: <Media omitted>
+24/05/23, 19:54 - Kanika Malkani: where are we on the date situation
+24/05/23, 20:53 - Pranay Saksena: No man's land ✌️
+24/05/23, 20:55 - Pranay Saksena: null
+24/05/23, 21:30 - Kanika Malkani: <Media omitted>
+24/05/23, 21:31 - Kanika Malkani: null
+25/05/23, 06:34 - Pranay Saksena: 10 shades? More like 3 ig
+25/05/23, 06:34 - Pranay Saksena: Where the hell are you?
+25/05/23, 10:12 - Kanika Malkani: hmmm interesting
+25/05/23, 10:13 - Kanika Malkani: goa
+26/05/23, 16:17 - Pranay Saksena: Noice noice
+26/05/23, 16:17 - Pranay Saksena: With friends I assume?
+26/05/23, 22:05 - Kanika Malkani: nahi
+08/06/23, 08:45 - Pranay Saksena: Heyyoo
+08/06/23, 08:45 - Pranay Saksena: We should prolly start planning the trek, there isn't much time left
+08/06/23, 08:46 - Pranay Saksena: No wait, this one is Alibaug
+08/06/23, 08:46 - Pranay Saksena: Yes
+08/06/23, 16:32 - Kanika Malkani: Helloo
+08/06/23, 16:32 - Kanika Malkani: I don't think it's happening:/
+08/06/23, 17:36 - Pranay Saksena: Kya ho gaya
+08/06/23, 19:55 - Kanika Malkani: divas mom straight up Said no
+08/06/23, 19:55 - Kanika Malkani: so we don't think we can do anything about it
+08/06/23, 19:56 - Pranay Saksena: The rest of us?
+08/06/23, 20:00 - Kanika Malkani: there's suraj and shubham left
+08/06/23, 20:00 - Kanika Malkani: pratham isn't coming to mumbai
+09/06/23, 21:23 - Pranay Saksena: Damn
+10/06/23, 21:07 - Kanika Malkani: hi
+10/06/23, 21:07 - Kanika Malkani: we're going for Spiderman tomorrow
+10/06/23, 21:07 - Kanika Malkani: at 7
+10/06/23, 21:07 - Kanika Malkani: do you wanna come
+10/06/23, 21:08 - Kanika Malkani: me suraj diva
+10/06/23, 21:09 - Pranay Saksena: Yesss
+10/06/23, 21:09 - Pranay Saksena: Send details
+10/06/23, 21:10 - Kanika Malkani: it's at
+10/06/23, 21:10 - Kanika Malkani: fun republic
+10/06/23, 22:09 - Pranay Saksena: How much for the ticket, us hisaab se I'll carry cash
+10/06/23, 22:22 - Kanika Malkani: it's 150 something
+10/06/23, 23:05 - Pranay Saksena: Cool cool
+10/06/23, 23:05 - Pranay Saksena: See ya!
+11/06/23, 18:41 - Kanika Malkani: hi
+11/06/23, 18:41 - Kanika Malkani: have you left
+11/06/23, 18:43 - Pranay Saksena: Yes
+11/06/23, 18:45 - Kanika Malkani: okay
+11/06/23, 18:45 - Kanika Malkani: the tickets are actually for tomorrow
+11/06/23, 18:51 - Pranay Saksena: Wait what?
+11/06/23, 18:54 - Kanika Malkani: we were kidding
+11/06/23, 18:54 - Kanika Malkani: the tickets are for today
+11/06/23, 18:54 - Kanika Malkani: ahahahha
+11/06/23, 18:54 - Kanika Malkani: come soon now
+11/06/23, 18:54 - Pranay Saksena: 🙄
+11/06/23, 18:55 - Pranay Saksena: Omw
+11/06/23, 18:56 - Kanika Malkani: <Media omitted>
+12/06/23, 00:07 - Kanika Malkani: helloooo
+12/06/23, 00:08 - Kanika Malkani: first off very very happy for you
+12/06/23, 00:08 - Kanika Malkani: can't wait to hear all about her
+12/06/23, 00:08 - Kanika Malkani: see u next week
+12/06/23, 00:08 - Pranay Saksena: Heyyyo
+12/06/23, 00:08 - Pranay Saksena: Thank you ❤️
+12/06/23, 00:08 - Kanika Malkani: and secondly, today's movie ticket was 220, popcorn 130
+12/06/23, 00:09 - Pranay Saksena: I was about to ask
+12/06/23, 00:09 - Kanika Malkani: are you gonna gpay?
+12/06/23, 00:09 - Pranay Saksena: Yeap rn
+12/06/23, 00:09 - Pranay Saksena: And there was mcd ka
+12/06/23, 00:09 - Pranay Saksena: Oh wait woh khud diya
+12/06/23, 00:10 - Kanika Malkani: yuss
+12/06/23, 00:10 - Kanika Malkani: oki cool
+12/06/23, 00:11 - Pranay Saksena: Bank server is busy lol, you'll get by morning or something
+12/06/23, 00:12 - Kanika Malkani: its all chill
+12/06/23, 12:39 - Pranay Saksena: Check
+12/06/23, 19:09 - Kanika Malkani: we have no doubt that you can gpay
+12/06/23, 19:28 - Pranay Saksena: 🤷‍♂️
+13/06/23, 19:34 - Pranay Saksena: null
+13/06/23, 21:14 - Kanika Malkani: aye I just saw that recently ahah
+29/06/23, 23:33 - Pranay Saksena: Heyyoo
+29/06/23, 23:34 - Kanika Malkani: hey
+29/06/23, 23:34 - Pranay Saksena: How was Suraj's bday celebration last night?
+29/06/23, 23:34 - Kanika Malkani: super funnn
+29/06/23, 23:34 - Kanika Malkani: v unexpected cuz major group mix
+29/06/23, 23:34 - Pranay Saksena: Yeah 😂
+29/06/23, 23:35 - Kanika Malkani: but yea was really good
+29/06/23, 23:35 - Kanika Malkani: the jokes kept coming in
+29/06/23, 23:35 - Kanika Malkani: and we were all laughing cuz  all related to school lmao
+29/06/23, 23:35 - Pranay Saksena: Varun was there so yeah
+29/06/23, 23:36 - Kanika Malkani: are you friends w him?
+29/06/23, 23:36 - Pranay Saksena: Not in touch, tho whenever we speak the guy cracks me up
+29/06/23, 23:36 - Kanika Malkani: 😂😂😂ahah okay
+29/06/23, 23:37 - Pranay Saksena: But I get it, noice re, school reunion nobody wanted but got and low-key enjoyed
+29/06/23, 23:37 - Kanika Malkani: No but yash and divij are also a vibe
+29/06/23, 23:37 - Kanika Malkani: like you'd never even spoken to them in school and now here we are
+29/06/23, 23:37 - Pranay Saksena: Exactly 😂😂
+29/06/23, 23:37 - Kanika Malkani: yes w the randomest circle
+29/06/23, 23:38 - Kanika Malkani: now I feel like the reunion should definitely happen
+29/06/23, 23:38 - Pranay Saksena: Umm okay, tho most people def won't come
+29/06/23, 23:38 - Pranay Saksena: Just a feeling
+29/06/23, 23:38 - Kanika Malkani: yes makes sense
+29/06/23, 23:38 - Kanika Malkani: some people don't wanna associate w school
+29/06/23, 23:38 - Kanika Malkani: at all
+29/06/23, 23:39 - Kanika Malkani: I loved school time tho
+29/06/23, 23:39 - Pranay Saksena: Yesssss
+29/06/23, 23:39 - Kanika Malkani: went from amreen disha to vidhita kiara and then the mili group
+29/06/23, 23:39 - Kanika Malkani: and to end w khushi doshi gang
+29/06/23, 23:39 - Kanika Malkani: and now we're w diva surajj
+29/06/23, 23:39 - Kanika Malkani: CRAZY
+29/06/23, 23:39 - Pranay Saksena: 😂😂
+29/06/23, 23:40 - Pranay Saksena: Yeah
+29/06/23, 23:40 - Pranay Saksena: Ik
+29/06/23, 23:40 - Pranay Saksena: Wait up
+29/06/23, 23:40 - Pranay Saksena: Didn't amreen get featured in some video recently
+29/06/23, 23:41 - Kanika Malkani: yes she did
+29/06/23, 23:41 - Kanika Malkani: everyone's having these random moments
+29/06/23, 23:41 - Kanika Malkani: wait
+29/06/23, 23:41 - Kanika Malkani: are you talking about the ad
+29/06/23, 23:42 - Kanika Malkani: or the marine drive reel
+29/06/23, 23:42 - Pranay Saksena: I don't recall this
+29/06/23, 23:42 - Pranay Saksena: Prolly this
+29/06/23, 23:43 - Pranay Saksena: She was w an actress or something
+29/06/23, 23:43 - Kanika Malkani: yes
+29/06/23, 23:43 - Kanika Malkani: that was the ad
+29/06/23, 23:43 - Kanika Malkani: the marine drive reel was iconic😂😂😂
+29/06/23, 23:45 - Kanika Malkani: https://www.instagram.com/reel/CqXOZIGN9tg/?igshid=MzRlODBiNWFlZA==
+29/06/23, 23:46 - Pranay Saksena: Man 😂😂
+29/06/23, 23:46 - Pranay Saksena: 😂😂😂😂
+29/06/23, 23:46 - Pranay Saksena: That IS iconic 😂😂😂😂😂😂😂
+29/06/23, 23:46 - Kanika Malkani: ikr
+29/06/23, 23:46 - Kanika Malkani: 😂😂😂😂😂
+29/06/23, 23:47 - Kanika Malkani: istg i wanna make it go viral
+29/06/23, 23:47 - Kanika Malkani: 🤣🤣🤣but she'd report my acc
+29/06/23, 23:47 - Pranay Saksena: Do it then do it
+29/06/23, 23:47 - Pranay Saksena: Nah she'd just threaten it
+29/06/23, 23:47 - Kanika Malkani: now if I have to do it
+29/06/23, 23:47 - Kanika Malkani: I'll just
+29/06/23, 23:47 - Kanika Malkani: do it on her hbd
+29/06/23, 23:47 - Pranay Saksena: Which is not far I'm guessing
+29/06/23, 23:48 - Pranay Saksena: She's also a July born roight?
+29/06/23, 23:48 - Pranay Saksena: Idk how I remember that
+29/06/23, 23:48 - Kanika Malkani: nope
+29/06/23, 23:48 - Kanika Malkani: like
+29/06/23, 23:48 - Kanika Malkani: a week
+29/06/23, 23:48 - Kanika Malkani: OMG
+29/06/23, 23:48 - Kanika Malkani: FREAKING OUR
+29/06/23, 23:48 - Kanika Malkani: sorry ahah
+29/06/23, 23:48 - Kanika Malkani: did you plan your birthday just yet
+29/06/23, 23:49 - Pranay Saksena: Naahhhh too involved in other things fsr
+29/06/23, 23:49 - Pranay Saksena: I just remembered our bdays are round the corner
+29/06/23, 23:49 - Pranay Saksena: Like JUST
+29/06/23, 23:49 - Pranay Saksena: SHIT
+29/06/23, 23:49 - Pranay Saksena: WHAT
+29/06/23, 23:49 - Pranay Saksena: Okay it's alright dw about it
+29/06/23, 23:50 - Kanika Malkani: someone else is gonna plan it for you
+29/06/23, 23:50 - Kanika Malkani: got the memo
+29/06/23, 23:50 - Kanika Malkani: loud and clear
+29/06/23, 23:53 - Pranay Saksena: Okay there's no need for sarcasm 🥲
+29/06/23, 23:53 - Pranay Saksena: Wait
+29/06/23, 23:53 - Pranay Saksena: I don't get it
+29/06/23, 23:53 - Kanika Malkani: 😂😂😂😂
+29/06/23, 23:54 - Kanika Malkani: If you have no plans for your birthday
+29/06/23, 23:54 - Kanika Malkani: then one of your friends has to swoop in to save the day right?
+29/06/23, 23:54 - Pranay Saksena: I guess?
+29/06/23, 23:55 - Pranay Saksena: Oh okay...
+29/06/23, 23:56 - Pranay Saksena: Btw, I told her you might have guessed her
+29/06/23, 23:56 - Pranay Saksena: So what's your final guess?
+29/06/23, 23:58 - Kanika Malkani: 😂😂😂😂
+29/06/23, 23:58 - Kanika Malkani: I know it
+29/06/23, 23:58 - Kanika Malkani: but i absolutely suck at names
+29/06/23, 23:58 - Kanika Malkani: i know her face
+29/06/23, 23:58 - Kanika Malkani: wait
+29/06/23, 23:59 - Pranay Saksena: Now don't go stalk her or something please oof
+30/06/23, 00:00 - Pranay Saksena: Just say the dress colour
+30/06/23, 00:01 - Kanika Malkani: no no
+30/06/23, 00:01 - Kanika Malkani: wait
+30/06/23, 00:02 - Pranay Saksena: Umm hmm
+30/06/23, 00:06 - Kanika Malkani: null
+30/06/23, 00:06 - Pranay Saksena: Dude I haven't seen this yet but if this is her picture I'm gonna go nuts and not show it
+30/06/23, 00:07 - Kanika Malkani: wait what
+30/06/23, 00:07 - Pranay Saksena: Okay...
+30/06/23, 00:08 - Pranay Saksena: I can neither confirm or deny whether this is true...
+30/06/23, 00:08 - Kanika Malkani: 😂😂😂😂😂😂
+30/06/23, 00:08 - Kanika Malkani: but still
+30/06/23, 00:09 - Kanika Malkani: it's a photo w a friend or girlfriend
+30/06/23, 00:09 - Pranay Saksena: But I'll tell you she'll absolutely kill me if she knows this picture exists and we don't have it
+30/06/23, 00:09 - Pranay Saksena: Also
+30/06/23, 00:09 - Pranay Saksena: HOW TF DO YOU HAVE THIS PICTURE
+30/06/23, 00:09 - Pranay Saksena: SEND IT TO ME!
+30/06/23, 00:09 - Kanika Malkani: 😏😏😏😏
+30/06/23, 00:10 - Kanika Malkani: to all those years that you've underestimated me
+30/06/23, 00:10 - Kanika Malkani: 🥰🥰🥰🥰
+30/06/23, 00:10 - Kanika Malkani: yes yes
+30/06/23, 00:10 - Pranay Saksena: 😂😂😂
+30/06/23, 00:10 - Pranay Saksena: I never underestimated you, just didn't know you had super powers frickin
+30/06/23, 00:11 - Pranay Saksena: Also wait
+30/06/23, 00:12 - Pranay Saksena: This was taken from a phone and not the professional camera there
+30/06/23, 00:12 - Pranay Saksena: How do you have this
+30/06/23, 00:12 - Pranay Saksena: Literally HOW
+30/06/23, 00:12 - Kanika Malkani: 😂😂😂😂😂😂😂
+30/06/23, 00:12 - Pranay Saksena: WTF this is scary
+30/06/23, 00:12 - Kanika Malkani: I love how intrigued you are
+30/06/23, 00:12 - Kanika Malkani: im keeping an eye pranay
+30/06/23, 00:12 - Kanika Malkani: I know everything about your life
+30/06/23, 00:12 - Kanika Malkani: except
+30/06/23, 00:12 - Kanika Malkani: her name
+30/06/23, 00:12 - Kanika Malkani: 😂😂😂
+30/06/23, 00:12 - Pranay Saksena: Kanika what the fuck
+30/06/23, 00:13 - Pranay Saksena: 😂😂😭
+30/06/23, 00:13 - Pranay Saksena: Who took this picture but
+30/06/23, 00:13 - Pranay Saksena: I don't even remember
+30/06/23, 00:14 - Pranay Saksena: Kanika I'm spiralling HELP ME
+30/06/23, 00:14 - Kanika Malkani: 😂😂😂😂😂😂😂😂😂😂
+30/06/23, 00:14 - Kanika Malkani: absolutely loving this
+30/06/23, 00:14 - Kanika Malkani: 😂😂😂😂
+30/06/23, 00:14 - Kanika Malkani: omg😂😂😂😂😂😂
+30/06/23, 00:15 - Kanika Malkani: <Media omitted>
+30/06/23, 00:15 - Kanika Malkani: see no one would spiral if this was just a picture w a "friend"
+30/06/23, 00:16 - Pranay Saksena: Oh come on you understood that long back get over yourself
+30/06/23, 00:16 - Kanika Malkani: <Media omitted>
+30/06/23, 00:16 - Kanika Malkani: tell me her name nowwww
+30/06/23, 00:16 - Kanika Malkani: or I can
+30/06/23, 00:17 - Kanika Malkani: find out
+30/06/23, 00:17 - Kanika Malkani: but I wanna hear it from you
+30/06/23, 00:17 - Pranay Saksena: Finding that out will not be that difficult actually
+30/06/23, 00:17 - Kanika Malkani: lemme try and be back😂
+30/06/23, 00:18 - Pranay Saksena: You're enjoying this aren't you 🙄
+30/06/23, 00:18 - Pranay Saksena: 😒
+30/06/23, 00:20 - Kanika Malkani: 🤣🤣🤣found her
+30/06/23, 00:20 - Kanika Malkani: took me 3 mins
+30/06/23, 00:20 - Kanika Malkani: omg
+30/06/23, 00:20 - Kanika Malkani: love it
+30/06/23, 00:21 - Pranay Saksena: Hmm...
+30/06/23, 00:21 - Pranay Saksena: So this is clearly a lot of fun for ya
+30/06/23, 00:21 - Pranay Saksena: You better keep it all inside
+30/06/23, 00:21 - Kanika Malkani: yes yes
+30/06/23, 00:21 - Kanika Malkani: not a soul that knows
+30/06/23, 00:21 - Pranay Saksena: The number of mutuals we have is crazy
+30/06/23, 00:22 - Pranay Saksena: So there is a real possibility it will spread
+30/06/23, 00:22 - Kanika Malkani: the two of y'all?
+30/06/23, 00:22 - Kanika Malkani: haanji haanji
+30/06/23, 00:22 - Pranay Saksena: Yes
+30/06/23, 00:22 - Kanika Malkani: I don't talk to anyone
+30/06/23, 00:22 - Kanika Malkani: fr
+30/06/23, 00:23 - Pranay Saksena: Okayy
+30/06/23, 00:23 - Pranay Saksena: But yes
+30/06/23, 00:23 - Pranay Saksena: Thanks for the photus they're lovely
+30/06/23, 00:23 - Pranay Saksena: And I'm afraid of you now
+30/06/23, 00:24 - Pranay Saksena: Meet me in July please, college is starting and if I don't plan things I will forget them very easily
+30/06/23, 00:45 - Kanika Malkani: anytime
+30/06/23, 00:45 - Kanika Malkani: ahahahhah love it
+30/06/23, 00:45 - Kanika Malkani: haanji will do
+30/06/23, 00:46 - Kanika Malkani: how's the internship
+30/06/23, 00:48 - Pranay Saksena: Ofc you do 🙄
+30/06/23, 00:48 - Pranay Saksena: Okay ish, not great
+30/06/23, 00:48 - Pranay Saksena: Dragging more or less
+30/06/23, 00:49 - Pranay Saksena: But I did good work so pat pat
+30/06/23, 00:49 - Pranay Saksena: I gotta go now, talk later?
+30/06/23, 00:58 - Kanika Malkani: wdymm
+30/06/23, 00:58 - Kanika Malkani: yes yes for sure
+30/06/23, 01:04 - Pranay Saksena: Byeee
+30/06/23, 01:04 - Kanika Malkani: dude came in just to say this😂
+30/06/23, 01:05 - Pranay Saksena: Yess
+30/06/23, 01:05 - Pranay Saksena: Byee is important
+30/06/23, 01:05 - Kanika Malkani: rab ne bana di Jodi said otherwise
+30/06/23, 01:05 - Pranay Saksena: Wait what
+30/06/23, 01:05 - Kanika Malkani: Shah rukh khan once said
+30/06/23, 01:05 - Kanika Malkani: never say bye
+30/06/23, 01:06 - Pranay Saksena: Oh yes what was it
+30/06/23, 01:06 - Kanika Malkani: "hum hai raahi pyaar ke....
+30/06/23, 01:06 - Kanika Malkani: you know the rest
+30/06/23, 01:06 - Pranay Saksena: Phir milenge chalte chalte 😂
+30/06/23, 01:06 - Kanika Malkani: they don't make movies like this anymore ahah
+30/06/23, 01:06 - Pranay Saksena: Noice 👌😂
+30/06/23, 01:06 - Pranay Saksena: I swear, bring them back
+30/06/23, 01:06 - Pranay Saksena: Re release rab ne bana di jodi
+30/06/23, 01:06 - Kanika Malkani: all we're getting is adipurush and pathaan
+30/06/23, 01:06 - Kanika Malkani: fr tho
+30/06/23, 01:06 - Pranay Saksena: Exactly
+30/06/23, 01:07 - Pranay Saksena: Ab samajh aaya
+30/06/23, 01:07 - Kanika Malkani: pathaan was literally so so so
+30/06/23, 01:07 - Kanika Malkani: trash
+30/06/23, 01:07 - Pranay Saksena: Katappa ne Bahubali ko kyu maara
+30/06/23, 01:07 - Kanika Malkani: 😂😂😂😂😂😂
+30/06/23, 01:07 - Kanika Malkani: 🤣🤣🤣🤣🤣
+30/06/23, 01:07 - Kanika Malkani: added a whole new definition to it
+30/06/23, 01:07 - Pranay Saksena: Katappa giving him one kantappa like
+30/06/23, 01:07 - Pranay Saksena: 😂😂😂
+30/06/23, 01:07 - Kanika Malkani: keeps getting funnier
+30/06/23, 01:08 - Kanika Malkani: they said something about the new ranveer singh movie
+30/06/23, 01:08 - Pranay Saksena: I mean why not, why spend millions on one project just to fuck it up
+30/06/23, 01:08 - Kanika Malkani: it looks promising but no one sells ticket like shah rukh khan. there's a freaking aura to it
+30/06/23, 01:09 - Pranay Saksena: I mean my parents tell me the same but yeah...
+30/06/23, 01:09 - Kanika Malkani: FREAKIN I'D WATCH AE DIL HAI MUSHKIL ALL OVER AGAIN JUST FOR HIS 10 SECS OF SCREEN TIME
+30/06/23, 01:09 - Kanika Malkani: 🤣🤣🤣🤣🤣🤣
+30/06/23, 01:09 - Pranay Saksena: Yeah, Shahrukh Khan will sell tickets anyhow
+30/06/23, 01:09 - Pranay Saksena: Oh my
+30/06/23, 01:09 - Pranay Saksena: NOOO
+30/06/23, 01:10 - Kanika Malkani: 😂😂😂😂
+30/06/23, 01:10 - Pranay Saksena: He didn't have that charm in adhm noo
+30/06/23, 01:10 - Kanika Malkani: he did he did
+30/06/23, 01:10 - Kanika Malkani: pathaan was the downfall
+30/06/23, 01:10 - Kanika Malkani: the dialogues
+30/06/23, 01:10 - Pranay Saksena: That I agree yes 🤣 undeniable
+30/06/23, 01:11 - Kanika Malkani: did you watch it in the theater
+30/06/23, 01:11 - Pranay Saksena: Agar pathaan ke ghar pe party rakhoge what
+30/06/23, 01:11 - Kanika Malkani: yes and saying something like "Gregor uncle"
+30/06/23, 01:11 - Pranay Saksena: Noo trailer se I knew what's coming buddy why would you do that to yourself
+30/06/23, 01:11 - Kanika Malkani: I went w my cousins
+30/06/23, 01:12 - Kanika Malkani: tripped on it for 2 hours straight
+30/06/23, 01:12 - Kanika Malkani: 😂😂😂😂
+30/06/23, 01:12 - Pranay Saksena: But it was your idea wasn't it 😉
+30/06/23, 01:12 - Kanika Malkani: the jokes wouldn't stop
+30/06/23, 01:12 - Kanika Malkani: always is
+30/06/23, 01:12 - Pranay Saksena: 😂😂😂
+30/06/23, 01:12 - Kanika Malkani: does anyone except me even plan anything 😂
+30/06/23, 01:12 - Pranay Saksena: There are people eternally grateful 🙏
+30/06/23, 01:13 - Pranay Saksena: Arey re
+30/06/23, 01:13 - Pranay Saksena: I haven't heard that
+30/06/23, 01:13 - Kanika Malkani: have u been to mystery rooms
+30/06/23, 01:13 - Kanika Malkani: and did you
+30/06/23, 01:13 - Pranay Saksena: No but I want to
+30/06/23, 01:13 - Kanika Malkani: watch the new Ranbir kapoor movie
+30/06/23, 01:13 - Pranay Saksena: Tu Jhooti?
+30/06/23, 01:13 - Kanika Malkani: yes
+30/06/23, 01:13 - Pranay Saksena: Yesss
+30/06/23, 01:13 - Pranay Saksena: My god that movie
+30/06/23, 01:13 - Pranay Saksena: I liked the first half
+30/06/23, 01:13 - Kanika Malkani: another movie in bollywood that makes u go😃
+30/06/23, 01:14 - Pranay Saksena: It really drew me in
+30/06/23, 01:14 - Pranay Saksena: Then it became real life trauma
+30/06/23, 01:14 - Kanika Malkani: do they not see the movie🤣
+30/06/23, 01:14 - Kanika Malkani: 😃😃
+30/06/23, 01:14 - Pranay Saksena: And I was like I know these people in real life
+30/06/23, 01:14 - Kanika Malkani: 😂😂mannn
+30/06/23, 01:15 - Pranay Saksena: I personally have been
+30/06/23, 01:15 - Pranay Saksena: In the middle of two people doing this and giving me second hand trauma
+30/06/23, 01:15 - Kanika Malkani: omg🫠😔
+30/06/23, 01:16 - Pranay Saksena: And when the entire family did the airport scene I was like sab ke sab gaand maraao jai maata di🙏
+30/06/23, 01:16 - Kanika Malkani: 😂😂😂😂😂😂😂
+30/06/23, 01:16 - Kanika Malkani: if you ever wanna trauma dump
+30/06/23, 01:16 - Kanika Malkani: let it all out here
+30/06/23, 01:16 - Kanika Malkani: I'm all 👂🏻👂🏻
+30/06/23, 01:17 - Pranay Saksena: Haan matlab itna nahi hai 😂
+30/06/23, 01:17 - Pranay Saksena: But yes
+30/06/23, 01:17 - Pranay Saksena: Mai to sab bol hi deta hu
+30/06/23, 01:17 - Kanika Malkani: hona chahiye
+30/06/23, 01:17 - Kanika Malkani: u know for
+30/06/23, 01:17 - Kanika Malkani: character development
+30/06/23, 01:17 - Kanika Malkani: mujhe toh kuch nahi pata
+30/06/23, 01:17 - Pranay Saksena: To tell my children? 😂
+30/06/23, 01:17 - Kanika Malkani: 😂😂😂😂😂
+30/06/23, 01:17 - Pranay Saksena: Hatt
+30/06/23, 01:17 - Kanika Malkani: arey
+30/06/23, 01:17 - Kanika Malkani: excuse me
+30/06/23, 01:18 - Kanika Malkani: "pata hai pappa ne kitni mehnat ki hai"
+30/06/23, 01:18 - Kanika Malkani: sleepless nights
+30/06/23, 01:18 - Pranay Saksena: Itna bhi nahi chahiye development bacche theek hai hum
+30/06/23, 01:18 - Pranay Saksena: 😂😂😂😂
+30/06/23, 01:18 - Kanika Malkani: skipping dinner cuz didn't have enough money nights
+30/06/23, 01:18 - Kanika Malkani: yes
+30/06/23, 01:18 - Pranay Saksena: 😂😂😂
+30/06/23, 01:18 - Kanika Malkani: 😂😂😂😂😂😂😂
+30/06/23, 01:19 - Kanika Malkani: did you just
+30/06/23, 01:19 - Kanika Malkani: I'll leave you w yourself then
+30/06/23, 01:19 - Pranay Saksena: What why 😂
+30/06/23, 01:19 - Kanika Malkani: you're laughing at your own text
+30/06/23, 01:19 - Pranay Saksena: Yeh imtiaz ali storyline nahi chahiye
+30/06/23, 01:19 - Pranay Saksena: Yeh to sab kehte hai
+30/06/23, 01:19 - Pranay Saksena: Oh I replied to the wrong one lol
+30/06/23, 01:20 - Kanika Malkani: haanji toh aapki kya kehna hai to your kids
+30/06/23, 01:20 - Pranay Saksena: Pata nahi aise abhi 😂
+30/06/23, 01:20 - Kanika Malkani: 😂😂😂😂
+30/06/23, 01:21 - Pranay Saksena: Kaam karo aish karo aur yeh character development ka scam mat jhelo
+30/06/23, 01:21 - Pranay Saksena: How did you find it?
+30/06/23, 01:22 - Kanika Malkani: loved it
+30/06/23, 01:22 - Kanika Malkani: they need to "struggle" in their life tho
+30/06/23, 01:22 - Kanika Malkani: switching apps to respond to me
+30/06/23, 01:22 - Kanika Malkani: okay then😂
+30/06/23, 01:24 - Pranay Saksena: Yeah
+30/06/23, 01:24 - Pranay Saksena: Yes
+30/06/23, 01:24 - Pranay Saksena: Zaruri
+30/06/23, 01:24 - Pranay Saksena: It is interesting tho
+30/06/23, 01:24 - Pranay Saksena: Two completely different conversation streams parallely
+30/06/23, 01:25 - Pranay Saksena: Baat karlo yaar ek doosre se
+30/06/23, 01:25 - Pranay Saksena: Woh bhi kar leti to mai kahin aur hota
+30/06/23, 01:25 - Kanika Malkani: this used to happen pehle w some people
+30/06/23, 01:25 - Kanika Malkani: one convo on whatsapp, 2 on Instagram
+30/06/23, 01:26 - Kanika Malkani: because spam and main are vibing completely differently
+30/06/23, 01:26 - Pranay Saksena: 😂😂😂😂
+30/06/23, 01:26 - Kanika Malkani: 😂😂😂😂
+30/06/23, 01:27 - Kanika Malkani: 1am conversations always hit different
+30/06/23, 01:27 - Kanika Malkani: I've actually texted hiya on what she has planned
+30/06/23, 01:27 - Kanika Malkani: and if she actually relied on the "amrit gang" to plan the reunion 😂
+30/06/23, 01:27 - Pranay Saksena: Yes they go to a part of the brain responsible for memory retention and permanent bakchodi
+30/06/23, 01:28 - Pranay Saksena: 😂😂😂😂😂😂
+30/06/23, 01:28 - Kanika Malkani: fr fr
+30/06/23, 01:28 - Pranay Saksena: 😂😂😂😂😂😂😂😂😂
+30/06/23, 01:28 - Kanika Malkani: 8am ko soch sakte ho yeh?
+30/06/23, 01:28 - Pranay Saksena: Na na, subah is bhakti time
+30/06/23, 01:28 - Kanika Malkani: tab toh good morning aur bhajan sun lo
+30/06/23, 01:29 - Kanika Malkani: 😂😂😂😠
+30/06/23, 01:29 - Kanika Malkani: I wanna go to isckon man
+30/06/23, 01:29 - Kanika Malkani: absolutely love it
+30/06/23, 01:29 - Pranay Saksena: This is so acc
+30/06/23, 01:29 - Kanika Malkani: w the food and all
+30/06/23, 01:29 - Pranay Saksena: Let's plan! Mere paas membership hai
+30/06/23, 01:29 - Kanika Malkani: oh?
+30/06/23, 01:29 - Kanika Malkani: oh?
+30/06/23, 01:29 - Kanika Malkani: what do you get in membership ji
+30/06/23, 01:29 - Pranay Saksena: The buffet we'll get kaafi kam price me
+30/06/23, 01:30 - Kanika Malkani: yes
+30/06/23, 01:30 - Kanika Malkani: nice
+30/06/23, 01:30 - Pranay Saksena: At the reception where else 😂
+30/06/23, 01:30 - Kanika Malkani: I usually go w my parents cuz I'll be ripped off without that😂
+30/06/23, 01:30 - Pranay Saksena: Chitragupta ji swayam aake de gaye lo biryani khao
+30/06/23, 01:30 - Kanika Malkani: arey oh😂
+I asked for perks not where
+30/06/23, 01:30 - Pranay Saksena: Same same
+30/06/23, 01:30 - Kanika Malkani: waah waah
+30/06/23, 01:31 - Pranay Saksena: Oh lol right
+30/06/23, 01:31 - Kanika Malkani: how much is it
+30/06/23, 01:31 - Pranay Saksena: That I don't know, parents bought it
+30/06/23, 01:31 - Pranay Saksena: But
+30/06/23, 01:31 - Kanika Malkani: I looked once 5 years ago and never looked again 😂
+30/06/23, 01:31 - Pranay Saksena: Food buffet you get for kaafi kam
+30/06/23, 01:31 - Kanika Malkani: that's nice
+30/06/23, 01:31 - Pranay Saksena: Rooms chahiye to you get on priority, that too saste me
+30/06/23, 01:31 - Kanika Malkani: interesting
+30/06/23, 01:32 - Pranay Saksena: You can skip long lines for darshan and get direct entry
+30/06/23, 01:32 - Kanika Malkani: this toh I've never seen a line
+30/06/23, 01:32 - Kanika Malkani: and
+30/06/23, 01:32 - Pranay Saksena: Arey Janmashtami
+30/06/23, 01:32 - Kanika Malkani: chowpatty one has better food no?
+30/06/23, 01:32 - Pranay Saksena: We went na my family
+30/06/23, 01:32 - Kanika Malkani: aha
+30/06/23, 01:32 - Pranay Saksena: For this
+30/06/23, 01:32 - Kanika Malkani: did I meet you or did i meet deeksha
+30/06/23, 01:32 - Pranay Saksena: The line went from the gate till 1km lamba
+30/06/23, 01:32 - Kanika Malkani: for this
+30/06/23, 01:33 - Pranay Saksena: Not even exaggerating
+30/06/23, 01:33 - Kanika Malkani: 😂😂😂
+30/06/23, 01:33 - Pranay Saksena: Maybe 700-800m but really
+30/06/23, 01:33 - Kanika Malkani: nice
+30/06/23, 01:33 - Kanika Malkani: you were part of this line?
+30/06/23, 01:33 - Pranay Saksena: Humne card dikhaya
+30/06/23, 01:33 - Kanika Malkani: haanji
+30/06/23, 01:33 - Pranay Saksena: Hume doosri line me le gaye
+30/06/23, 01:33 - Kanika Malkani: aur 700 became 70
+30/06/23, 01:33 - Kanika Malkani: got it
+30/06/23, 01:33 - Pranay Saksena: We walked for those 700m in speed
+30/06/23, 01:33 - Pranay Saksena: Past all the people waiting
+30/06/23, 01:33 - Kanika Malkani: 😂😂😂😂😂
+30/06/23, 01:34 - Kanika Malkani: I've done this at
+30/06/23, 01:34 - Pranay Saksena: 😂
+30/06/23, 01:34 - Kanika Malkani: idk if you jan mein there was this art festival
+30/06/23, 01:34 - Kanika Malkani: know
+30/06/23, 01:34 - Pranay Saksena: Sasson
+30/06/23, 01:34 - Kanika Malkani: yes
+30/06/23, 01:34 - Pranay Saksena: Sassoon dicks
+30/06/23, 01:34 - Pranay Saksena: Docks
+30/06/23, 01:34 - Pranay Saksena: Shit
+30/06/23, 01:34 - Kanika Malkani: there was a 700 m line
+30/06/23, 01:34 - Pranay Saksena: 1am is hitting hard
+30/06/23, 01:34 - Pranay Saksena: Damn
+30/06/23, 01:35 - Kanika Malkani: I nicely reached late so all my peeps were waiting right at the gate
+30/06/23, 01:35 - Kanika Malkani: 😂😂😂😂😂
+30/06/23, 01:35 - Kanika Malkani: or more actually idk
+30/06/23, 01:36 - Pranay Saksena: Ouh nice
+30/06/23, 01:36 - Pranay Saksena: Perks of waking up late been there
+30/06/23, 01:36 - Kanika Malkani: no no
+30/06/23, 01:36 - Pranay Saksena: Sassoon was another hit
+30/06/23, 01:36 - Kanika Malkani: just purposely being late
+30/06/23, 01:36 - Kanika Malkani: yes
+30/06/23, 01:36 - Kanika Malkani: dudes reached churchgate
+30/06/23, 01:37 - Kanika Malkani: meanwhile I was at LIC andheri🤣🤣🤣🤣
+30/06/23, 01:37 - Pranay Saksena: 😂😂😂😂
+30/06/23, 01:37 - Pranay Saksena: Noice yeh bhi karna chahiye
+30/06/23, 01:38 - Kanika Malkani: yes try it
+30/06/23, 01:38 - Kanika Malkani: anyways
+30/06/23, 01:38 - Kanika Malkani: you literally came to say bye and have been here ever since
+30/06/23, 01:39 - Kanika Malkani: we should sleep ahah
+30/06/23, 01:39 - Pranay Saksena: Hum hai raahi pyaar ke
+30/06/23, 01:39 - Pranay Saksena: ...
+30/06/23, 01:39 - Pranay Saksena: Yess
+30/06/23, 01:40 - Kanika Malkani: 😂😂😂😂
+30/06/23, 01:40 - Kanika Malkani: thank you
+30/06/23, 01:40 - Kanika Malkani: Goodnight ji
+30/06/23, 01:40 - Pranay Saksena: Kya thank you complete the sentence
+30/06/23, 01:41 - Pranay Saksena: 😕
+30/06/23, 01:41 - Kanika Malkani: phir milenge
+30/06/23, 01:41 - Kanika Malkani: chalte chalte
+30/06/23, 01:41 - Pranay Saksena: Yay
+30/06/23, 01:41 - Kanika Malkani: I thought this was representation
+30/06/23, 01:42 - Pranay Saksena: Lol nvm
+30/06/23, 01:42 - Pranay Saksena: Goodnight 😴
+06/07/23, 09:07 - Pranay Saksena: Heyyy!
+06/07/23, 09:07 - Pranay Saksena: I told you some great news on insta and you didn't reply 🥲
+06/07/23, 09:30 - Kanika Malkani: helluu
+06/07/23, 09:30 - Kanika Malkani: haven't seen Instagram dms🥲
+06/07/23, 09:30 - Kanika Malkani: lemme see
+06/07/23, 10:01 - Pranay Saksena: Yess
+11/07/23, 17:18 - Pranay Saksena: AYEEE
+11/07/23, 17:18 - Pranay Saksena: Chocolate Heaven, near Mithibai college, 3.30pm tomorrow Wednesday
+11/07/23, 17:19 - Pranay Saksena: This time it won't disappear 🫠
+11/07/23, 17:40 - Kanika Malkani: it
+11/07/23, 17:40 - Kanika Malkani: okay sure
+11/07/23, 17:40 - Kanika Malkani: chocolate heaven has literally nothing to eat thoooo
+11/07/23, 17:40 - Pranay Saksena: Really
+11/07/23, 17:41 - Kanika Malkani: yes
+11/07/23, 17:41 - Pranay Saksena: Vru suggested it so she might have something in mind
+11/07/23, 17:41 - Pranay Saksena: Pakka na?
+11/07/23, 17:42 - Kanika Malkani: red
+11/07/23, 17:42 - Kanika Malkani: flag
+11/07/23, 17:42 - Kanika Malkani: 😂😂😂😂😂😂😂
+11/07/23, 17:42 - Kanika Malkani: jk
+11/07/23, 17:42 - Pranay Saksena: Shut the fuck up Kanika 😂
+11/07/23, 17:42 - Kanika Malkani: yes
+11/07/23, 17:42 - Pranay Saksena: Anushka Pande our junior is also coming
+11/07/23, 17:42 - Pranay Saksena: So
+11/07/23, 17:42 - Kanika Malkani: I wish it was closer to home
+11/07/23, 17:42 - Kanika Malkani: but sure
+11/07/23, 17:42 - Kanika Malkani: what is going on
+11/07/23, 17:43 - Pranay Saksena: We're not setting you two up don't worry
+11/07/23, 17:43 - Pranay Saksena: The two dates just clashed so we thought why not
+11/07/23, 17:44 - Pranay Saksena: Why not do one mahamilan
+17/07/23, 16:57 - Kanika Malkani: what time
+17/07/23, 16:58 - Pranay Saksena: I've reached 4 bungalows now, 5.15 opp celebrations club?
+17/07/23, 16:58 - Pranay Saksena: What do you wanna do
+17/07/23, 16:58 - Pranay Saksena: We'll walk for a few minutes
+17/07/23, 16:59 - Kanika Malkani: pls define few
+17/07/23, 16:59 - Kanika Malkani: and hullo listen it's your birthday
+17/07/23, 16:59 - Pranay Saksena: 15mins?
+17/07/23, 16:59 - Kanika Malkani: no need to move from anywhere
+17/07/23, 17:00 - Pranay Saksena: Arey 😂 I'm already omw back from college
+17/07/23, 17:00 - Kanika Malkani: haan haan
+17/07/23, 17:00 - Kanika Malkani: toh come near high point ig
+17/07/23, 17:00 - Pranay Saksena: Tu abhi nikal jaa
+17/07/23, 17:00 - Pranay Saksena: I'm about to reach
+17/07/23, 17:01 - Kanika Malkani: 😂😂😂😂😂
+17/07/23, 17:01 - Kanika Malkani: where have u reached
+17/07/23, 17:01 - Kanika Malkani: 4 bungalows
+17/07/23, 17:01 - Pranay Saksena: Circle
+19/07/23, 13:02 - Kanika Malkani: Does anyone know how to compose music? Please PC
+(It's for a hindi song)
+19/07/23, 13:03 - Pranay Saksena: Yeah, there's a friend of mine, I'll share his profile on insta
+19/07/23, 13:03 - Pranay Saksena: Also
+19/07/23, 13:03 - Pranay Saksena: We'll have to postpone this mostly
+19/07/23, 13:30 - Kanika Malkani: pls do
+19/07/23, 13:30 - Kanika Malkani: thank god it came from your side
+19/07/23, 13:58 - Pranay Saksena: Aye saali 😂
+19/07/23, 16:17 - Kanika Malkani: 😂😂😂😂😂😂
+19/07/23, 20:07 - Pranay Saksena: Can we go out somewhere tomorrow instead? I was thinking mission impossible 5 or something
+19/07/23, 23:04 - Kanika Malkani: can this not happen on a weekend
+19/07/23, 23:04 - Kanika Malkani: or after 6
+20/07/23, 08:36 - Pranay Saksena: I'm not sure
+20/07/23, 08:36 - Pranay Saksena: This works for me
+20/07/23, 09:32 - Kanika Malkani: okay
+20/07/23, 10:02 - Kanika Malkani: today??
+20/07/23, 10:02 - Kanika Malkani: it's raining bahut
+20/07/23, 10:03 - Pranay Saksena: Yeah, something indoors then?
+20/07/23, 17:39 - Kanika Malkani: yes
+20/07/23, 17:39 - Kanika Malkani: now it stopped raining
+20/07/23, 17:39 - Kanika Malkani: did y'all have college
+20/07/23, 17:39 - Pranay Saksena: We had studio hours, no lecures
+20/07/23, 17:39 - Pranay Saksena: Im home tho, got a meeting till 6.30
+20/07/23, 17:40 - Kanika Malkani: aha okay
+20/07/23, 17:40 - Pranay Saksena: What's up>
+20/07/23, 17:40 - Pranay Saksena: ?
+20/07/23, 17:40 - Kanika Malkani: work👍🏻😃
+20/07/23, 17:40 - Kanika Malkani: was gonna go watch inception
+20/07/23, 17:40 - Pranay Saksena: why not?
+20/07/23, 17:41 - Kanika Malkani: the show is in 19 mins pranay😂
+20/07/23, 17:41 - Pranay Saksena: oh
+20/07/23, 17:41 - Pranay Saksena: lol
+20/07/23, 17:41 - Kanika Malkani: yes
+20/07/23, 17:42 - Kanika Malkani: next one is 11 in the night
+20/07/23, 17:42 - Kanika Malkani: all my friends have deadlines😃👍🏻
+20/07/23, 17:43 - Pranay Saksena: So she told her parents and they made us breakup yesterday
+20/07/23, 17:44 - Kanika Malkani: sure pranay
+20/07/23, 17:44 - Kanika Malkani: sure
+20/07/23, 17:46 - Pranay Saksena: 🙄
+20/07/23, 17:46 - Kanika Malkani: you're joking
+20/07/23, 17:46 - Pranay Saksena: 😒
+20/07/23, 17:46 - Kanika Malkani: right??
+20/07/23, 17:46 - Kanika Malkani: TELL ME YOU'RE JOKING
+20/07/23, 17:47 - Pranay Saksena: No 😬
+20/07/23, 17:47 - Kanika Malkani: 😃
+20/07/23, 17:47 - Kanika Malkani: NOW WHAT
+20/07/23, 17:47 - Kanika Malkani: what time do you get doen
+20/07/23, 17:48 - Pranay Saksena: Meeting got postponed, it starts at 6.30
+20/07/23, 17:48 - Kanika Malkani: 😃
+20/07/23, 17:48 - Pranay Saksena: Will take an hourish
+20/07/23, 17:48 - Kanika Malkani: cool see u at 7.30
+20/07/23, 17:48 - Pranay Saksena: Idek what this means 😶
+20/07/23, 17:50 - Kanika Malkani: it's a traumatized smile
+20/07/23, 17:51 - Pranay Saksena: Okayy, but can we do something rather? I don't want to talk about it much
+20/07/23, 17:51 - Kanika Malkani: yes yes for sure
+20/07/23, 17:51 - Kanika Malkani: let me look for shows
+20/07/23, 17:52 - Pranay Saksena: Theek hai I'll ask dad till then
+20/07/23, 17:52 - Pranay Saksena: Yeh dekh, pehle bolne par bhi maan sakti thi 😒
+20/07/23, 17:53 - Kanika Malkani: there's a
+20/07/23, 17:53 - Kanika Malkani: 8pm show
+20/07/23, 17:53 - Kanika Malkani: of mission impossible
+20/07/23, 17:53 - Kanika Malkani: yes yes sorry
+20/07/23, 17:54 - Kanika Malkani: at fun cinemas
+20/07/23, 17:56 - Pranay Saksena: Ig let's hangout tomorrow only, kal shaam ko
+20/07/23, 17:59 - Kanika Malkani: tomorrow I have a cousin coming over but I'll try my best
+20/07/23, 17:59 - Kanika Malkani: are you fine
+20/07/23, 17:59 - Kanika Malkani: ???
+20/07/23, 17:59 - Kanika Malkani: you know you can rant here whenever
+20/07/23, 17:59 - Kanika Malkani: call whenever u have to
+20/07/23, 18:00 - Pranay Saksena: yeah I actually am
+20/07/23, 18:00 - Pranay Saksena: this part aside
+20/07/23, 18:00 - Pranay Saksena: Ik yes
+20/07/23, 18:01 - Pranay Saksena: Okay, thanks for being there Kanika ❤❤❤
+20/07/23, 18:01 - Kanika Malkani: okii good to know
+20/07/23, 18:01 - Pranay Saksena: I will call pakka if I feel like
+20/07/23, 18:01 - Kanika Malkani: yes
+20/07/23, 20:18 - Kanika Malkani: where are you
+20/07/23, 20:22 - Pranay Saksena: 2mins
+20/07/23, 22:00 - Pranay Saksena: Heyy, thanks for today
+20/07/23, 22:01 - Pranay Saksena: Where will I get a friend like you
+20/07/23, 22:01 - Kanika Malkani: <Media omitted>
+20/07/23, 22:01 - Pranay Saksena: Also don't judge me lemme accept my emotions and have my own journey
+20/07/23, 22:02 - Kanika Malkani: listen if you felt unheard today, I'm sorry, you're really mature and handling this pretty well, way better than any human would, it shows how sane you are
+now If you know this about yourself and have acknowledged the situation, the best you can do is make it better for her
+20/07/23, 22:03 - Kanika Malkani: ALL THIS WITHOUT IT INTERFERING W YOUR ACADS
+20/07/23, 22:03 - Kanika Malkani: and you had some real good project you were working on no?
+20/07/23, 22:03 - Kanika Malkani: just make sure you never sideline all of that and you're good
+20/07/23, 22:04 - Kanika Malkani: and eventually if you have the confidence in your parents to understand the situation well, you will tell them
+20/07/23, 22:04 - Pranay Saksena: I didn't feel unheard, you were there, you took it maturely. But it'd be better if you don't profile things yet, I don't want to start thinking in a different direction because somebody else said so
+20/07/23, 22:04 - Kanika Malkani: these are the moments you realize that their relationship w you over the years has matured or not
+20/07/23, 22:05 - Pranay Saksena: I'm actually glad we spoke, honestly
+20/07/23, 22:05 - Pranay Saksena: Haan
+20/07/23, 22:05 - Kanika Malkani: I'm here to make
+20/07/23, 22:05 - Kanika Malkani: jokes about it
+20/07/23, 22:05 - Pranay Saksena: Yesss
+20/07/23, 22:05 - Kanika Malkani: in house comedian
+20/07/23, 22:05 - Kanika Malkani: for free
+20/07/23, 22:05 - Pranay Saksena: Then it's fine 😂
+20/07/23, 22:05 - Kanika Malkani: 😂😂😂😂
+20/07/23, 22:06 - Pranay Saksena: Chalo I gotta go
+20/07/23, 22:06 - Kanika Malkani: yes yes
+20/07/23, 22:06 - Pranay Saksena: <Media omitted>
+20/07/23, 22:06 - Pranay Saksena: Byeee
+20/07/23, 22:06 - Kanika Malkani: aww
+20/07/23, 22:06 - Kanika Malkani: <Media omitted>
+20/07/23, 22:06 - Kanika Malkani: yet again
+20/07/23, 22:07 - Pranay Saksena: 😂
+20/07/23, 22:07 - Pranay Saksena: ❤️❤️
+20/07/23, 23:43 - Kanika Malkani: pls
+20/07/23, 23:43 - Kanika Malkani: sleep
+20/07/23, 23:43 - Kanika Malkani: early
+20/07/23, 23:44 - Pranay Saksena: I'll have to work thoda abhi
+20/07/23, 23:44 - Kanika Malkani: 😠
+20/07/23, 23:44 - Pranay Saksena: I'm sorry but I have to finish this 😭
+20/07/23, 23:45 - Kanika Malkani: ugh
+20/07/23, 23:45 - Pranay Saksena: Kal dikhaana hai
+20/07/23, 23:45 - Kanika Malkani: what time do you sleep
+20/07/23, 23:45 - Pranay Saksena: Usually 12-12.30
+20/07/23, 23:45 - Kanika Malkani: shite okay
+20/07/23, 23:45 - Kanika Malkani: okiii
+20/07/23, 23:45 - Pranay Saksena: Thank you 🙏❤️
+20/07/23, 23:46 - Pranay Saksena: Please continue to be there for me and I'll be greater than ever 🙏❤️
+20/07/23, 23:47 - Kanika Malkani: yeh koi
+20/07/23, 23:47 - Kanika Malkani: bolne wali baat hai
+21/07/23, 18:44 - Kanika Malkani: hi
+21/07/23, 18:44 - Kanika Malkani: what's up
+21/07/23, 18:44 - Kanika Malkani: sorry I'm thoda sleeping toh was sleeping for a bit
+21/07/23, 18:44 - Pranay Saksena: Can you download a story for me
+21/07/23, 18:45 - Kanika Malkani: you can do that?
+21/07/23, 18:45 - Pranay Saksena: Some apps let you do that
+21/07/23, 18:46 - Pranay Saksena: See na
+21/07/23, 18:46 - Kanika Malkani: yes one sec
+21/07/23, 18:48 - Pranay Saksena: The story disappears in two hours, ek baar check insta and try to get it for me please, I'll wait
+21/07/23, 18:49 - Kanika Malkani: yes yes
+21/07/23, 18:49 - Kanika Malkani: it'll take one sec
+21/07/23, 18:52 - Kanika Malkani: insta is public?
+21/07/23, 18:52 - Kanika Malkani: their account?
+21/07/23, 18:52 - Pranay Saksena: Check dms, if you can see the story
+21/07/23, 18:52 - Kanika Malkani: I don't have Instagram 😅
+21/07/23, 18:53 - Pranay Saksena: You do na
+21/07/23, 18:54 - Kanika Malkani: https://build.vanutp.dev/instander/clone/instander-17.2-c.apk
+21/07/23, 18:54 - Kanika Malkani: I can get the story for u
+21/07/23, 18:54 - Kanika Malkani: give @
+21/07/23, 18:55 - Kanika Malkani: of that person
+21/07/23, 18:55 - Pranay Saksena: @vrushtii_22
+There are two stories
+21/07/23, 18:56 - Kanika Malkani: u lmk if the acc is public tho
+21/07/23, 18:56 - Pranay Saksena: How do I check?
+21/07/23, 18:57 - Pranay Saksena: I follow her already
+21/07/23, 19:00 - Kanika Malkani: when u try to send her story
+21/07/23, 19:00 - Kanika Malkani: does it say it's a private acc???
+21/07/23, 19:00 - Kanika Malkani: upar
+21/07/23, 19:01 - Pranay Saksena: No
+21/07/23, 19:02 - Pranay Saksena: Go ahead
+21/07/23, 19:02 - Kanika Malkani: toh lemme ask my friend and get it downloaded for y
+21/07/23, 19:02 - Kanika Malkani: dw this friend doesn't know who you are
+21/07/23, 19:02 - Kanika Malkani: no
+21/07/23, 19:02 - Kanika Malkani: questions asked
+21/07/23, 19:02 - Pranay Saksena: Cool
+21/07/23, 19:02 - Kanika Malkani: unless the story is sus😂
+21/07/23, 19:02 - Pranay Saksena: 🙏🙏🙏
+21/07/23, 19:03 - Kanika Malkani: the acc is private
+21/07/23, 19:03 - Kanika Malkani: he said
+21/07/23, 19:04 - Pranay Saksena: Can he teach me how to do it?
+21/07/23, 19:04 - Kanika Malkani: screen record he said😂
+21/07/23, 19:05 - Pranay Saksena: How to do that
+21/07/23, 19:05 - Kanika Malkani: <Media omitted>
+21/07/23, 19:06 - Pranay Saksena: I don't have it in my Samsung
+21/07/23, 19:07 - Kanika Malkani: u can install this
+21/07/23, 19:07 - Kanika Malkani: or download a screen recorder
+21/07/23, 19:07 - Kanika Malkani: on your phone
+21/07/23, 19:12 - Pranay Saksena: Got it
+21/07/23, 19:12 - Pranay Saksena: Just so you know it wasn't anything sus
+21/07/23, 19:12 - Kanika Malkani: show😂
+21/07/23, 19:13 - Pranay Saksena: <Media omitted>
+21/07/23, 19:13 - Pranay Saksena: You don't have to say anything 🙏 I'm just thankful to you
+21/07/23, 19:14 - Kanika Malkani: that is so freakin aesthetic
+21/07/23, 19:14 - Kanika Malkani: for the last time I'm telling you
+no one here is judging you I swear
+don't even think about that for a sec
+21/07/23, 19:15 - Kanika Malkani: we gonna see this thru together
+21/07/23, 19:15 - Pranay Saksena: We will ❤️
+22/07/23, 01:16 - Kanika Malkani: <Media omitted>
+22/07/23, 01:16 - Kanika Malkani: I forgot to ask
+22/07/23, 01:16 - Kanika Malkani: is this of some significance to you???
+22/07/23, 07:51 - Pranay Saksena: 😂😂
+22/07/23, 07:51 - Pranay Saksena: I'll tell you about it later
+23/07/23, 14:54 - Pranay Saksena: https://youtube.com/shorts/zAy47zfn-k8?feature=share3
+27/07/23, 18:20 - Kanika Malkani: hello
+27/07/23, 18:20 - Kanika Malkani: what's up
+27/07/23, 19:15 - Pranay Saksena: Heyyy
+27/07/23, 19:15 - Pranay Saksena: So a friend of mine made a bday reel for me
+27/07/23, 19:18 - Kanika Malkani: aww
+27/07/23, 19:18 - Kanika Malkani: that's nice
+27/07/23, 19:19 - Pranay Saksena: <Media omitted>
+27/07/23, 19:30 - Kanika Malkani: that's cute
+27/07/23, 19:30 - Kanika Malkani: your tag posts feel like main character moment
+27/07/23, 19:31 - Pranay Saksena: Lol okay
+27/07/23, 19:31 - Pranay Saksena: I'm side character in my own life re what you sayin
+27/07/23, 19:31 - Pranay Saksena: Btw
+27/07/23, 19:31 - Pranay Saksena: I saw Oppenheimer yesterdayyyyyy
+27/07/23, 19:32 - Kanika Malkani: 😂😂😂😂shut up
+27/07/23, 19:32 - Kanika Malkani: how did you like it
+27/07/23, 19:32 - Pranay Saksena: A lot!
+27/07/23, 19:32 - Kanika Malkani: and don't tell me your have plans for barbie
+27/07/23, 19:32 - Pranay Saksena: Itna focus itni lambi movie pe pehle kabhi nahi hua
+27/07/23, 19:32 - Kanika Malkani: 😂😂😂😂😂
+27/07/23, 19:32 - Kanika Malkani: fr
+27/07/23, 19:32 - Pranay Saksena: No bro did you not see my barbenheimer outfit
+27/07/23, 19:32 - Pranay Saksena: I wore it for Oppenheimer now I'm done
+27/07/23, 19:32 - Kanika Malkani: Einstein my manz face was iconic
+27/07/23, 19:33 - Kanika Malkani: good v proud
+27/07/23, 19:33 - Kanika Malkani: barbie is
+27/07/23, 19:33 - Pranay Saksena: 😂
+27/07/23, 19:33 - Kanika Malkani: canceled
+27/07/23, 19:33 - Pranay Saksena: Trash?
+27/07/23, 19:33 - Pranay Saksena: Well okay 😂
+27/07/23, 19:33 - Kanika Malkani: nooooo
+27/07/23, 19:33 - Kanika Malkani: that's an understatement
+27/07/23, 19:34 - Pranay Saksena: Lol
+27/07/23, 19:34 - Pranay Saksena: Statement hi nahi chahiye
+27/07/23, 19:34 - Kanika Malkani: idk how it's the highest weekend opener
+27/07/23, 19:34 - Kanika Malkani: 155M vs 80M
+27/07/23, 19:34 - Pranay Saksena: And not Oppenheimer?
+27/07/23, 19:34 - Pranay Saksena: WTF
+27/07/23, 19:35 - Pranay Saksena: Pink dress hai to jaana zaruri hai kya
+27/07/23, 19:35 - Kanika Malkani: yes
+27/07/23, 19:35 - Kanika Malkani: nope
+06/08/23, 12:45 - Pranay Saksena: Heyy, you free to meet tomorrow?
+06/08/23, 14:20 - Kanika Malkani: hi
+06/08/23, 14:20 - Kanika Malkani: I don't think so
+06/08/23, 15:31 - Pranay Saksena: Okay, lemme know if sometime next weekend opens up
+06/08/23, 16:55 - Kanika Malkani: yuss
+06/08/23, 16:55 - Pranay Saksena: Everything's okay?
+06/08/23, 17:18 - Kanika Malkani: yes
+06/08/23, 21:10 - Pranay Saksena: <Media omitted>
+06/08/23, 21:15 - Pranay Saksena: Aaj bahut dino baad mann kiya✌️
+06/08/23, 23:25 - Kanika Malkani: so so so
+06/08/23, 23:25 - Kanika Malkani: calming
+06/08/23, 23:26 - Kanika Malkani: get spotify versions of these so that we can hear them on loop
+06/08/23, 23:26 - Kanika Malkani: pls pls
+07/08/23, 09:15 - Pranay Saksena: Thank you! 🥹❤️
+14/08/23, 11:45 - Pranay Saksena: Kanikaaaaaa
+14/08/23, 11:46 - Pranay Saksena: Could you share your grad project ppt w me? I remember it had to do with data and AI, wanted to see if it is related to my project...
+14/08/23, 15:13 - Kanika Malkani: hi
+14/08/23, 15:13 - Kanika Malkani: yes yes
+14/08/23, 15:13 - Kanika Malkani: shall send by eod
+14/08/23, 18:14 - Kanika Malkani: till then
+14/08/23, 18:14 - Kanika Malkani: https://www.linkedin.com/posts/kanika-malkani-aa5a7a213_graduation-nmims-growth-activity-7096829445612695552-lTeX?utm_source=share&utm_medium=member_android
+15/08/23, 00:58 - Kanika Malkani: https://www.canva.com/design/DAFriz_El2M/tiFUR9MKuDn6Q2Kx5SyaBQ/edit?utm_content=DAFriz_El2M&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+15/08/23, 00:58 - Kanika Malkani: it's thoda technical, coming up w a LinkedIn post for it soon, If you wanna wait for that, or else have a look at this
+17/08/23, 13:32 - Kanika Malkani: hi
+17/08/23, 13:52 - Pranay Saksena: Ho
+21/08/23, 19:07 - Pranay Saksena: <Media omitted>
+26/08/23, 22:57 - Kanika Malkani: hi
+26/08/23, 22:57 - Kanika Malkani: I'm in a meeting
+26/08/23, 22:57 - Kanika Malkani: which was connected to my Hotspot
+26/08/23, 22:57 - Kanika Malkani: eheh
+26/08/23, 22:57 - Kanika Malkani: what's up
+26/08/23, 22:57 - Pranay Saksena: Heyy
+26/08/23, 22:57 - Kanika Malkani: should I whatsapp call
+26/08/23, 22:57 - Pranay Saksena: No issues
+26/08/23, 22:57 - Pranay Saksena: Yeap
+26/08/23, 22:58 - Pranay Saksena: <Media omitted>
+26/08/23, 22:57 - Kanika Malkani: Missed voice call
+27/08/23, 00:57 - Kanika Malkani: hello hi
+27/08/23, 00:57 - Kanika Malkani: I'm so sorry I got a call
+27/08/23, 00:58 - Kanika Malkani: we can go tomorrow
+27/08/23, 00:58 - Kanika Malkani: although we have to buy her book na?
+27/08/23, 09:11 - Pranay Saksena: Yaay 🎉
+27/08/23, 09:12 - Pranay Saksena: Let's see, idts it's necessary
+27/08/23, 13:27 - Pranay Saksena: <Media omitted>
+27/08/23, 13:27 - Pranay Saksena: <Media omitted>
+27/08/23, 13:35 - Kanika Malkani: hi
+27/08/23, 13:35 - Kanika Malkani: bad news
+27/08/23, 13:36 - Kanika Malkani: I have two deadlines before 5
+27/08/23, 13:36 - Pranay Saksena: Oof
+27/08/23, 13:36 - Kanika Malkani: and my cousin preponed his hbd celebration
+27/08/23, 13:36 - Kanika Malkani: bowling at 8 turned to bowling at 6
+27/08/23, 13:36 - Pranay Saksena: Koi na, work abhi, hum baad ke liye plan karte hai
+27/08/23, 13:41 - Kanika Malkani: yes I'm so sorry☹️
+09/09/23, 22:02 - Pranay Saksena: Heyy, aaj mushkil hai, let's plan something for tomorrow?
+09/09/23, 22:13 - Kanika Malkani: yes
+09/09/23, 22:13 - Kanika Malkani: my mom still hasn't come back so haven't had din din <This message was edited>
+09/09/23, 22:18 - Pranay Saksena: Ohkay
+09/09/23, 22:18 - Pranay Saksena: Think think what can we do tomorrow
+09/09/23, 22:37 - Kanika Malkani: Same time same place😂
+10/09/23, 11:37 - Pranay Saksena: Only on... 😂✨
+10/09/23, 11:38 - Pranay Saksena: Post dinner mushkil hai, let's keep evening rather
+10/09/23, 13:05 - Kanika Malkani: acha okay
+10/09/23, 18:10 - Kanika Malkani: can we meet during the week??
+10/09/23, 18:12 - Pranay Saksena: Ayeee
+10/09/23, 18:13 - Pranay Saksena: I have less work today, week ka you'll have to text when you're free tab I'll have to see
+10/09/23, 18:13 - Pranay Saksena: Mil na be aaj
+10/09/23, 18:13 - Kanika Malkani: yes works
+I have so much work aaj
+10/09/23, 18:13 - Kanika Malkani: <Media omitted>
+10/09/23, 18:14 - Kanika Malkani: he mad
+10/09/23, 18:14 - Kanika Malkani: what should I bribe u with?
+10/09/23, 18:14 - Pranay Saksena: Figure out what I like 😌
+10/09/23, 18:16 - Pranay Saksena: P.s it starts with pi and ends with zza 😗
+10/09/23, 18:16 - Kanika Malkani: 😏😏😏
+10/09/23, 18:16 - Kanika Malkani: works works works
+10/09/23, 18:16 - Kanika Malkani: I have this huge problem
+10/09/23, 18:17 - Pranay Saksena: Haa
+10/09/23, 18:17 - Kanika Malkani: I keep forgetting if you eat non veg or not😂
+10/09/23, 18:17 - Kanika Malkani: like all the time
+10/09/23, 18:17 - Pranay Saksena: I do, but I'm tryna not this month
+10/09/23, 18:17 - Kanika Malkani: why what happ
+10/09/23, 18:17 - Kanika Malkani: veg pizza nice only
+10/09/23, 18:17 - Pranay Saksena: Aise hi, feels right for the time being
+10/09/23, 18:17 - Kanika Malkani: 😃
+10/09/23, 18:18 - Kanika Malkani: like
+10/09/23, 18:18 - Pranay Saksena: Tu pizza toh la we'll see re 🤦‍♂️
+10/09/23, 18:18 - Kanika Malkani: saving the chickens or religiously?
+10/09/23, 18:18 - Kanika Malkani: u want the pizza to come to u or do u want to go to it?
+10/09/23, 18:18 - Pranay Saksena: Bitch neither - doesn't feel right for me.
+10/09/23, 18:19 - Kanika Malkani: 😂😂😂😂😂
+10/09/23, 18:19 - Pranay Saksena: I'm not thinking about something other than me here - just in case you think I'm out for the greater good.
+10/09/23, 18:20 - Kanika Malkani: oh
+10/09/23, 18:20 - Kanika Malkani: interesting
+10/09/23, 18:20 - Kanika Malkani: #savethechicken
+10/09/23, 18:20 - Pranay Saksena: Itna I don't wanna think re 😂
+10/09/23, 18:20 - Pranay Saksena: #savepranayboi
+10/09/23, 18:21 - Kanika Malkani: arey😂
+10/09/23, 18:21 - Kanika Malkani: 😂😂😂😂😂
+10/09/23, 18:21 - Pranay Saksena: #savekanikamaata
+10/09/23, 18:21 - Pranay Saksena: Oh shit
+10/09/23, 18:21 - Pranay Saksena: Kandika
+10/09/23, 18:21 - Kanika Malkani: kandika
+10/09/23, 18:21 - Pranay Saksena: I had forgotten
+10/09/23, 18:21 - Kanika Malkani: yea
+10/09/23, 18:21 - Kanika Malkani: it became worse recently
+10/09/23, 18:21 - Kanika Malkani: my cousins started calling me something else only
+10/09/23, 18:22 - Pranay Saksena: Kya bole, kaana?
+10/09/23, 18:23 - Kanika Malkani: yeh toh last year
+10/09/23, 18:23 - Kanika Malkani: I will tell u when we meet😎
+10/09/23, 18:26 - Pranay Saksena: Damn
+10/09/23, 18:26 - Pranay Saksena: Yes then
+10/09/23, 18:27 - Pranay Saksena: You will forget to meet only, let alone this 👀
+10/09/23, 18:29 - Kanika Malkani: makes sense
+10/09/23, 18:29 - Kanika Malkani: but what are you here for🥰
+10/09/23, 22:43 - Pranay Saksena: ~Wth no~ aww 🥰
+10/09/23, 23:07 - Kanika Malkani: <Media omitted>
+15/09/23, 14:00 - Kanika Malkani: helloooo
+15/09/23, 14:00 - Kanika Malkani: what are you doing on Saturday?
+15/09/23, 14:01 - Pranay Saksena: Heyyoo
+15/09/23, 14:01 - Pranay Saksena: I have an assignment on Monday 😭
+15/09/23, 14:01 - Pranay Saksena: I'll lyk if I can figure out Sat
+15/09/23, 14:18 - Kanika Malkani: oh okay
+16/09/23, 15:31 - Kanika Malkani: pspspps
+16/09/23, 15:32 - Kanika Malkani: listen no
+16/09/23, 15:32 - Kanika Malkani: remember you'd told me this printer dude you know in kamdhenu?
+16/09/23, 15:32 - Kanika Malkani: is he cheap? or like super expensive
+16/09/23, 15:56 - Pranay Saksena: Kamdhenu shopping centre me
+16/09/23, 15:56 - Pranay Saksena: Go straight in, ekdum centre me there is that shop
+16/09/23, 15:56 - Pranay Saksena: Moderate to expensive
+16/09/23, 15:57 - Kanika Malkani: hmmm
+16/09/23, 15:57 - Kanika Malkani: you went to utpal so your definition of expensive is
+16/09/23, 15:57 - Kanika Malkani: anyways twice as expensive as a normal person
+16/09/23, 16:19 - Pranay Saksena: Okay can you kindly go fuck yourself 🙃
+16/09/23, 16:19 - Pranay Saksena: A to Z printers, Andheri east station
+If you want sabse saste me
+16/09/23, 16:46 - Pranay Saksena: Monday evening ka rakhte hai, today there's lotta work
+16/09/23, 17:58 - Kanika Malkani: <Media omitted>
+16/09/23, 17:58 - Kanika Malkani: he spilled in 2 secs
+16/09/23, 17:58 - Kanika Malkani: oki cool
+19/09/23, 16:41 - Pranay Saksena: <Media omitted>
+19/09/23, 17:33 - Kanika Malkani: 🥹🥹🥹🥹🥹🥹🥹 <This message was edited>
+19/09/23, 18:02 - Pranay Saksena: 🥰🥰
+21/09/23, 00:37 - Pranay Saksena: Heyy
+21/09/23, 00:37 - Pranay Saksena: Wish aunty from my side too ❤️
+21/09/23, 00:42 - Kanika Malkani: hii
+21/09/23, 00:42 - Kanika Malkani: sure will doooo
+21/09/23, 00:43 - Pranay Saksena: Also
+21/09/23, 00:43 - Kanika Malkani: how was gannu szn
+21/09/23, 00:43 - Pranay Saksena: It's late so don't judge me
+21/09/23, 00:43 - Pranay Saksena: But
+21/09/23, 00:43 - Kanika Malkani: 👂🏻
+21/09/23, 00:43 - Pranay Saksena: You deleted this message
+21/09/23, 00:43 - Pranay Saksena: You deleted this message
+21/09/23, 00:44 - Kanika Malkani: did something happen after that dayyyy
+21/09/23, 00:44 - Kanika Malkani: fit is 🥰😍
+21/09/23, 00:45 - Kanika Malkani: by the looks of it, yes
+21/09/23, 00:45 - Pranay Saksena: I'll tell story when we meet ✨
+21/09/23, 00:45 - Kanika Malkani: areyy
+21/09/23, 00:45 - Pranay Saksena: Thank you ❤️
+21/09/23, 00:46 - Kanika Malkani: <Media omitted>
+21/09/23, 00:46 - Pranay Saksena: No. Meet.
+21/09/23, 00:46 - Kanika Malkani: <Media omitted>
+21/09/23, 00:46 - Kanika Malkani: yeh le
+21/09/23, 00:46 - Kanika Malkani: bribe
+21/09/23, 00:46 - Kanika Malkani: is it working
+21/09/23, 00:46 - Pranay Saksena: Photo also gone. No meet no photo.
+21/09/23, 00:46 - Pranay Saksena: In reverse yes.
+21/09/23, 00:46 - Pranay Saksena: Next your contact I'll delete.
+21/09/23, 00:47 - Kanika Malkani: <Media omitted>
+21/09/23, 00:47 - Pranay Saksena: <Media omitted>
+21/09/23, 00:47 - Pranay Saksena: <Media omitted>
+21/09/23, 00:48 - Kanika Malkani: excuse me😂
+21/09/23, 00:48 - Kanika Malkani: noooooo😂
+21/09/23, 00:48 - Pranay Saksena: <Media omitted>
+21/09/23, 00:48 - Pranay Saksena: <Media omitted>
+21/09/23, 00:48 - Kanika Malkani: <Media omitted>
+21/09/23, 00:48 - Kanika Malkani: me patiently waiting for
+21/09/23, 00:48 - Kanika Malkani: the story
+21/09/23, 00:49 - Pranay Saksena: <Media omitted>
+21/09/23, 00:49 - Pranay Saksena: Wait wait
+21/09/23, 00:49 - Pranay Saksena: Achhe se wait
+21/09/23, 00:49 - Kanika Malkani: <Media omitted>
+21/09/23, 00:49 - Kanika Malkani: <Media omitted>
+21/09/23, 00:49 - Kanika Malkani: me w u rnnnn
+21/09/23, 00:50 - Kanika Malkani: what can I possibly threaten u with
+21/09/23, 00:50 - Pranay Saksena: Ghanta
+21/09/23, 00:50 - Kanika Malkani: oh haan
+21/09/23, 00:50 - Pranay Saksena: Hatt
+21/09/23, 00:50 - Kanika Malkani: I have your mummys number
+21/09/23, 00:50 - Kanika Malkani: mein spill kar dungi
+21/09/23, 00:50 - Kanika Malkani: 🥰🥰🥰🥰🥰
+21/09/23, 00:50 - Pranay Saksena: Papa ko bhi bata de
+21/09/23, 00:50 - Kanika Malkani: 😂😂😂😂😂yaar
+21/09/23, 00:50 - Pranay Saksena: Already done 😘✌️
+21/09/23, 00:51 - Kanika Malkani: nahi pehle we need mummy to process it
+21/09/23, 00:51 - Kanika Malkani: <Media omitted>
+21/09/23, 00:51 - Kanika Malkani: proud
+21/09/23, 00:51 - Pranay Saksena: Haan yeh dekh palti
+21/09/23, 00:52 - Pranay Saksena: null
+21/09/23, 00:56 - Kanika Malkani: arey
+21/09/23, 00:56 - Kanika Malkani: khud bataya toh vvvv proud
+21/09/23, 00:56 - Kanika Malkani: ab itna sab ho gaya aur bataya bhi nahi
+21/09/23, 00:56 - Pranay Saksena: Padosi bataaye
+21/09/23, 00:57 - Pranay Saksena: Itna sab ho gaya mili bhi nahi
+21/09/23, 00:57 - Kanika Malkani: aise meeting ko Mark karna tha
+21/09/23, 00:57 - Kanika Malkani: with high importance
+21/09/23, 00:57 - Pranay Saksena: I'm super angy🖕you have no excuse
+21/09/23, 00:59 - Kanika Malkani: <Media omitted>
+21/09/23, 00:59 - Kanika Malkani: sorry na
+21/09/23, 00:59 - Kanika Malkani: 🥺🥺🥺
+21/09/23, 00:59 - Pranay Saksena: <Media omitted>
+21/09/23, 00:59 - Kanika Malkani: will you actually be mad
+21/09/23, 00:59 - Kanika Malkani: at your
+21/09/23, 00:59 - Kanika Malkani: 8th grade partner🥺
+21/09/23, 01:00 - Pranay Saksena: <Media omitted>
+21/09/23, 01:00 - Pranay Saksena: Goli maaro saali ko
+21/09/23, 01:00 - Kanika Malkani: itna gussa
+21/09/23, 01:01 - Pranay Saksena: <Media omitted>
+21/09/23, 01:01 - Pranay Saksena: <Media omitted>
+21/09/23, 01:01 - Kanika Malkani: my god
+21/09/23, 01:01 - Kanika Malkani: when will this drama be over
+21/09/23, 01:01 - Kanika Malkani: lmk
+21/09/23, 01:02 - Kanika Malkani: I will return then
+21/09/23, 01:02 - Pranay Saksena: <Media omitted>
+21/09/23, 01:02 - Pranay Saksena: Mujhe drama over karne ka kya milega?
+21/09/23, 01:03 - Kanika Malkani: <Media omitted>
+21/09/23, 01:03 - Pranay Saksena: Lil more
+21/09/23, 01:04 - Kanika Malkani: <Media omitted>
+21/09/23, 01:04 - Pranay Saksena: Okay convinced 🥺
+21/09/23, 01:04 - Kanika Malkani: null
+21/09/23, 01:05 - Pranay Saksena: Wth is this reporting asap
+21/09/23, 01:06 - Pranay Saksena: I have to go sleep now
+21/09/23, 01:06 - Pranay Saksena: 23rd I have jury, Sunday 24th onwards I'm free
+21/09/23, 01:06 - Pranay Saksena: You better plan something
+21/09/23, 01:06 - Kanika Malkani: 🥺
+21/09/23, 01:06 - Pranay Saksena: Or else this will go in reverse
+21/09/23, 01:07 - Kanika Malkani: 😂😂😂😂😂
+21/09/23, 01:07 - Kanika Malkani: lemme breath a lil
+21/09/23, 01:07 - Pranay Saksena: No breathe when you meet me
+21/09/23, 01:07 - Kanika Malkani: yes we'll plan after 27th
+21/09/23, 01:07 - Pranay Saksena: Tab kya hai?
+21/09/23, 01:07 - Kanika Malkani: boyf hbd
+21/09/23, 01:07 - Pranay Saksena: Hmm
+21/09/23, 01:08 - Pranay Saksena: Tell him to celebrate next year
+21/09/23, 01:08 - Pranay Saksena: Byeee
+21/09/23, 01:08 - Kanika Malkani: 👍🏻
+21/09/23, 01:08 - Kanika Malkani: 😃
+21/09/23, 01:08 - Kanika Malkani: ok
+21/09/23, 01:08 - Pranay Saksena: 😂
+21/09/23, 01:08 - Pranay Saksena: ✌️
+21/09/23, 01:10 - Kanika Malkani: go away
+21/09/23, 01:11 - Pranay Saksena: Haan theek hai I will let him celebrate this time 😂🥹
+21/09/23, 01:12 - Pranay Saksena: 🫶
+21/09/23, 01:12 - Pranay Saksena: Yes text karna
+21/09/23, 01:12 - Pranay Saksena: Byeee
+21/09/23, 01:13 - Kanika Malkani: arey thanks haan🌚
+27/09/23, 12:58 - Pranay Saksena: Wish him a happy birthday from my side! 🎈
+27/09/23, 15:40 - Kanika Malkani: thanku ji
+28/09/23, 14:48 - Kanika Malkani: hi
+28/09/23, 14:50 - Pranay Saksena: Heyyoo
+28/09/23, 15:05 - Kanika Malkani: we can meet for a bit tomorrow
+28/09/23, 17:45 - Pranay Saksena: Cool, evening 6-6.30 would work
+28/09/23, 17:56 - Kanika Malkani: I come back at 8😅
+28/09/23, 18:33 - Pranay Saksena: What time day after then?
+28/09/23, 18:34 - Kanika Malkani: going out of town
+28/09/23, 18:34 - Kanika Malkani: <Media omitted>
+28/09/23, 18:34 - Pranay Saksena: Okay
+29/09/23, 21:14 - Pranay Saksena: Post dinner walk pe jaana hai? Lemme know
+29/09/23, 21:20 - Kanika Malkani: hi hi hi
+29/09/23, 21:20 - Kanika Malkani: I was at my nanis
+29/09/23, 21:20 - Kanika Malkani: 30 mins only I can do🥺
+29/09/23, 21:20 - Pranay Saksena: What time?
+29/09/23, 21:21 - Kanika Malkani: 9.40?
+29/09/23, 21:21 - Pranay Saksena: 10 o'clock onwards only I can come
+29/09/23, 21:21 - Kanika Malkani: okiii
+29/09/23, 21:22 - Pranay Saksena: Celebrations club?
+29/09/23, 21:38 - Kanika Malkani: yes
+29/09/23, 21:45 - Pranay Saksena: I'll meet you there at 10
+29/09/23, 21:57 - Kanika Malkani: listennn
+29/09/23, 21:57 - Kanika Malkani: it's raining
+29/09/23, 22:00 - Kanika Malkani: hullo
+29/09/23, 22:10 - Pranay Saksena: 3 mins right 🫡
+29/09/23, 23:04 - Kanika Malkani: did you reach
+29/09/23, 23:12 - Pranay Saksena: Yus
+29/09/23, 23:12 - Pranay Saksena: Did you reach
+29/09/23, 23:28 - Kanika Malkani: yes yes
+29/09/23, 23:28 - Pranay Saksena: Hum aapko text par
+29/09/23, 23:28 - Pranay Saksena: Apne jeevan ke
+29/09/23, 23:29 - Pranay Saksena: Live updates de
+29/09/23, 23:29 - Pranay Saksena: Unless aap apni zindagi se khush hai😂
+29/09/23, 23:31 - Kanika Malkani: <Media omitted>
+29/09/23, 23:31 - Pranay Saksena: Wait I'm out i can't hear
+30/09/23, 11:25 - Pranay Saksena: Typical Sobo girl behaviour 🌝
+30/09/23, 11:46 - Kanika Malkani: arey🥺
+"""
+
+# Split the conversation into individual messages
+messages = conversation.strip().split('\n')
+
+# Regular expression to match the pattern of messages
+message_pattern = re.compile(r"(\d{2}/\d{2}/\d{2}), (\d{2}:\d{2}) - (.*?): (.*)")
+
+# List to hold all message dictionaries
+message_list = []
+
+# Process each message
+for msg in messages:
+    match = message_pattern.match(msg)
+    if match:
+        # Extract date, time, author, and message
+        date_str, time_str, name, message = match.groups()
+        
+        # Convert to 12-hour format if needed
+        time_obj = datetime.strptime(time_str, '%H:%M')
+        time_12hr = time_obj.strftime('%I:%M %p')
+        
+        # Create a dictionary for the current message
+        message_dict = {
+            "name": name,
+            "message": message,
+            "time": time_12hr,
+            "date": date_str,
+            "you": True if name.strip() == "Kanika Malkani" else False  # Assuming 'You' is a placeholder for the user's name
+        }
+        message_list.append(message_dict)
+
+# Convert the message list to a JSON string
+json_output = json.dumps(message_list, indent=4, ensure_ascii=False)
+
+# Save the JSON to a file
+with open('chat_messages.json', 'w', encoding='utf-8') as json_file:
+    json_file.write(json_output)
+
+print("JSON file created successfully.")
